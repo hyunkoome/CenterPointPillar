@@ -1,55 +1,28 @@
-FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
 
-RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+ARG HOST_UID
+ARG HOST_GID
+ARG HOST_USER
+ENV HOST_UID=${HOST_UID?-1000}
+ENV GROUP_ID=${HOST_GID?-1000}
+ENV USER_NAME=${HOST_USER?-vueron}
 
-# Install basics
-RUN apt-get update -y \
-    && apt-get install build-essential \
-    && apt-get install -y apt-utils git curl ca-certificates bzip2 tree htop wget \
-    && apt-get install -y libglib2.0-0 libsm6 libxext6 libxrender-dev bmon iotop g++ python3.7 python3.7-dev python3.7-distutils
+# ENV PYTHONPATH="${PYTHONPATH}:/OpenPCDet"
+RUN groupadd -g $HOST_GID $HOST_USER && \
+    useradd -rm -u $HOST_UID -g $HOST_USER $HOST_USER && \
+    usermod -aG sudo $HOST_USER && \
+    echo "$HOST_USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Install cmake v3.13.2
-RUN apt-get purge -y cmake && \
-    mkdir /root/temp && \
-    cd /root/temp && \
-    wget https://github.com/Kitware/CMake/releases/download/v3.13.2/cmake-3.13.2.tar.gz && \
-    tar -xzvf cmake-3.13.2.tar.gz && \
-    cd cmake-3.13.2 && \
-    bash ./bootstrap && \
-    make && \
-    make install && \
-    cmake --version && \
-    rm -rf /root/temp
+# ROS2 Foxy installation
+RUN sudo apt update && \
+    sudo apt install software-properties-common && \
+    sudo add-apt-repository universe && \
+    sudo apt update && sudo apt install curl -y && \
+    sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null && \
+    sudo apt update && \
+    sudo apt install ros-foxy-desktop python3-argcomplete -y && \
+    sudo apt install ros-dev-tools -y
 
-# Install python
-RUN ln -sv /usr/bin/python3.7 /usr/bin/python
-RUN wget https://bootstrap.pypa.io/get-pip.py && \
-	python get-pip.py && \
-	rm get-pip.py
-
-# Install python packages
-RUN PIP_INSTALL="python -m pip --no-cache-dir install" && \
-    $PIP_INSTALL numpy==1.19.3 llvmlite numba 
-
-# Install torch and torchvision
-# See https://pytorch.org/ for other options if you use a different version of CUDA
-RUN pip install --user torch==1.6 torchvision==0.7.0 -f https://download.pytorch.org/whl/cu102/torch_stable.html
-
-# Install python packages
-RUN PIP_INSTALL="python -m pip --no-cache-dir install" && \
-    $PIP_INSTALL tensorboardX easydict pyyaml scikit-image tqdm SharedArray six
-
-WORKDIR /root
-
-# Install Boost geometry
-RUN wget https://jaist.dl.sourceforge.net/project/boost/boost/1.68.0/boost_1_68_0.tar.gz && \
-    tar xzvf boost_1_68_0.tar.gz && \
-    cp -r ./boost_1_68_0/boost /usr/include && \
-    rm -rf ./boost_1_68_0 && \
-    rm -rf ./boost_1_68_0.tar.gz 
-
-# A weired problem that hasn't been solved yet
-RUN pip uninstall -y SharedArray && \
-    pip install SharedArray
-
-RUN pip install spconv-cu102
+RUN echo "source /opt/ros/foxy/setup.bash" >> /home/$HOST_USER/.bashrc

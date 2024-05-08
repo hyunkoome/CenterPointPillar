@@ -3,23 +3,29 @@
 You can either build the docker image through Dockerfile or pull the docker image from dockerhub. Please make sure nvidia-docker is corretly installed.
 
 ## Build Through Dockerfile
-Build docker image that support OpenPCDet through:
+Build the docker base image.
 ```shell script
-docker build ./ -t openpcdet-docker
+docker build -f docker/env.Dockerfile -t openpcdet-env docker/
 ```
-Note that if you would like to use dynamic voxelization, you need further install [`torch_scatter`](https://github.com/rusty1s/pytorch_scatter) package. 
+## User Configuration
+Get your GID, UID, and username.
+``` shell
+# GID
+echo $(id -g)
+# UID
+echo $(id -u)
+# username
+echo $(id -un)
+```
+Fill in the `.env` file with the GID, UID, and username like below.
+``` shell
+HOST_UID=1000
+HOST_GID=1000
+HOST_USER=jr
+```
+## Container Start
+Start the container.
+``` shell
+docker compose up --build -d
+```
 
-From this Dockerfile, the installed version of spconv is 2.x, if you would like to use spconv 1.2.1, please follow these steps:
-```shell script
-git clone -b v1.2.1 https://github.com/djiajunustc/spconv spconv --recursive
-cd spconv
-python setup.py bdist_wheel
-cd ./dist
-pip install *.whl
-```
-
-## Pull From Dockerhub
-Run the following script to pull the docker image:
-```shell script
-docker pull djiajun1206/pcdet:pytorch1.6
-```

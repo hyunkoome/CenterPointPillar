@@ -1,0 +1,40 @@
+services:
+  openpcdet:
+    image: openpcdet
+    env_file:
+      - .env
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: openpcdet-env
+        HOST_UID: $HOST_UID
+        HOST_GID: $HOST_GID
+        HOST_USER: $HOST_USER
+    container_name: centerpoint
+    user: $HOST_UID:$HOST_GID
+    volumes:
+      - .:/home/$HOST_USER/OpenPCDet
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - $HOME/.ssh:/home/jr/.ssh
+      - $HOME/.config:/home/jr/.config
+      - $HOME/.gitconfig:/home/jr/.gitconfig
+      - ~/Dataset:/Dataset
+    working_dir: /home/$HOST_USER/OpenPCDet
+    environment:
+      - DISPLAY=$DISPLAY
+      - QT_X11_NO_MITSHM=1
+      - TZ="Asia/Seoul"
+    privileged: true
+    network_mode: host
+    stdin_open: true
+    tty: true
+    ipc: host
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+              count: all
