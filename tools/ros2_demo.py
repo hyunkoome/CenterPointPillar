@@ -1,6 +1,9 @@
 import rclpy
+import rclpy.duration
 from rclpy.node import Node
+import ros2_numpy as rnp
 from sensor_msgs.msg import PointCloud2, PointField
+from std_msgs.msg import ColorRGBA
 from tf_transformations import quaternion_from_euler
 from visualization_msgs.msg import Marker, MarkerArray
 
@@ -19,72 +22,63 @@ class CenterpointNode(Node):
                                    training=False, root_path=Path(args.data_path),
                                    ext=args.ext, logger=logger)
         self.iter = iter(self.dataset)
-        self.get_logger().info(f'Total number of samples: \t{len(self.dataset)}')
         self.model = build_network(model_cfg=cfg.MODEL, num_class=len(cfg.CLASS_NAMES), dataset=self.dataset)
         self.model.load_params_from_file(filename=args.ckpt, logger=logger, to_cpu=True)
         self.model.cuda()
         self.model.eval()
 
-        self.pc_pub = self.create_publisher(PointCloud2, '/waymo', 10)
+        self.pc_sub = self.create_subscription(PointCloud2, '/lidar/top/pointcloud', self.pc_callback, 10)
         self.vis_pub = self.create_publisher(MarkerArray, '/boxes', 10)
-        self.timer = self.create_timer(0.1, self.timer_callback)
-    
-    def timer_callback(self):
+
+    def pc_callback(self, msg: PointCloud2):
         start = self.get_clock().now()
+        data = rnp.numpify(msg)
+        pc_ny = np.concatenate([data['xyz'], np.zeros([data['xyz'].shape[0], 1])], axis=1)
+        input_dict = self.dataset.data_processor.forward(data_dict={'points': pc_ny,
+                                                                    'use_lead_xyz': True})
         with torch.no_grad():
-            data_dict = next(self.iter, 0)
-            if data_dict == 0:
-                self.iter = iter(self.dataset)
-                data_dict = next(self.iter)
-            pc = data_dict['points']
-            data_dict = self.dataset.collate_batch([data_dict])
+            data_dict = self.dataset.collate_batch([input_dict])
             load_data_to_gpu(data_dict)
             pred_dicts, _ = self.model.forward(data_dict)
-
-        pc_msg = self.np2ros(pc)
         vis_msg = self.get_marker(pred_dicts)
-
         self.vis_pub.publish(vis_msg)
-        self.pc_pub.publish(pc_msg)
         end = self.get_clock().now()
         elapsed = end - start
         self.get_logger().info(f'Elapsed time: {elapsed.nanoseconds/1e6} ms')
-    
+
     def get_marker(self, pred_dicts: list) -> MarkerArray:
         marker_array_msg = MarkerArray()
         ref_boxes = pred_dicts[0]['pred_boxes'].cpu().numpy()
         ref_scores = pred_dicts[0]['pred_scores'].cpu().numpy()
         ref_labels = pred_dicts[0]['pred_labels'].cpu().numpy()
-        
+
         for i, [box, score, label] in enumerate(zip(ref_boxes, ref_scores, ref_labels)):
             if score < 0.5:
                 continue
             marker = Marker()
             marker.id = i
-            marker.header.frame_id = 'map'
+            marker.header.frame_id = 'base_link'
             marker.header.stamp = self.get_clock().now().to_msg()
             marker.type = Marker.CUBE
             marker.action = Marker.ADD
             marker.pose.position.x = float(box[0])
             marker.pose.position.y = float(box[1])
             marker.pose.position.z = float(box[2])
-            quaternion = quaternion_from_euler(0, 0, box[6])
-            # marker.pose.orientation.x = quaternion[0]
-            # marker.pose.orientation.y = quaternion[1]
-            # marker.pose.orientation.z = quaternion[2]
-            # marker.pose.orientation.w = quaternion[3]
-            marker.pose.orientation.x = 0.0
-            marker.pose.orientation.y = 0.0
-            marker.pose.orientation.z = 0.0
-            marker.pose.orientation.w = 1.0
+            quat = quaternion_from_euler(0, 0, box[6])
+            marker.pose.orientation.x = quat[0]
+            marker.pose.orientation.y = quat[1]
+            marker.pose.orientation.z = quat[2]
+            marker.pose.orientation.w = quat[3]
             marker.scale.x = float(box[3])
             marker.scale.y = float(box[4])
             marker.scale.z = float(box[5])
-            marker.color.a = 0.0
-            
-            marker.color.r = 0.0
-            marker.color.g = 1.0
-            marker.color.b = 0.0
+            if label == 1:
+                marker.color = ColorRGBA(r=1.0, g=0.0, b=0.0, a=0.5)
+            elif label == 2:
+                marker.color = ColorRGBA(r=0.0, g=1.0, b=0.0, a=0.5)
+            else:
+                marker.color = ColorRGBA(r=0.0, g=0.0, b=1.0, a=0.5)
+            marker.lifetime = rclpy.duration.Duration(seconds=0.1).to_msg()
             marker_array_msg.markers.append(marker)
         return marker_array_msg
 
