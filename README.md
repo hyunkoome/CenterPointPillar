@@ -19,8 +19,19 @@ This repository is dedicated solely to inferencing the CenterPoint-pointpillar m
 - Pytorch: 1.13.1
 ### 2. Docker Container Start
 Please refer to the [docker/README.md](docker/README.md) for more details.
-### 4. PCDET Installation
+### 3. PCDET Installation
 ``` shell
 cd ~/OpenPCDet
 sudo python setup.py develop
 ```
+## Usage
+Support the below iference methods:
+- ROS2 Python Node
+- ROS2 C++ Node (Comming soon....)
+### 1. ROS2 Python Node
+``` shell
+cd tools/
+python ros2_demo.py --cfg_file {cfg_path} --ckpt {ckpt_path}
+```
+<!-- show picture sources/fig1.png-->
+<img src="sources/fig1.png" align="center" width="100%">
