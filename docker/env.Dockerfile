@@ -23,7 +23,7 @@ RUN git clone https://github.com/opencv/opencv.git -b $CV_VERSION
 WORKDIR /opencv/opencv/build
 
 RUN cmake .. &&\
-make -j8 &&\
+make -j12 &&\
 make install &&\
 ldconfig &&\
 rm -rf /opencv
@@ -38,8 +38,21 @@ ENV TORCH_CUDA_ARCH_LIST="3.5;5.0;6.0;6.1;7.0;7.5;8.0;8.6+PTX"
 # OpenPCDet Dependencies
 RUN apt remove python3-blinker -y
 RUN pip3 install -U pip
-RUN pip3 install numpy==1.23.0 llvmlite numba tensorboardX easydict pyyaml scikit-image tqdm SharedArray open3d==0.16.0 mayavi av2 kornia pyquaternion
+RUN pip3 install numpy==1.23.0 llvmlite numba tensorboardX easydict pyyaml scikit-image tqdm SharedArray open3d==0.16.0 mayavi av2 kornia==0.6.8 pyquaternion
 RUN pip3 install spconv-cu116
+RUN pip3 install opencv-python==4.2.0.34
 
 ENV NVIDIA_VISIBLE_DEVICES="all" \
     NVIDIA_DRIVER_CAPABILITIES="all"
+
+# ROS2 Foxy installation
+RUN sudo apt update && \
+    sudo apt install software-properties-common && \
+    sudo add-apt-repository universe && \
+    sudo apt update && sudo apt install curl -y && \
+    sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null && \
+    sudo apt update && \
+    sudo apt install ros-foxy-desktop python3-argcomplete -y && \
+    sudo apt install ros-dev-tools ros-foxy-rqt* ros-foxy-tf-transformations -y
+RUN sudo pip install transforms3d

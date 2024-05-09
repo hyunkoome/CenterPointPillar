@@ -30,6 +30,7 @@ services:
     stdin_open: true
     tty: true
     ipc: host
+    pid: host
     runtime: nvidia
     deploy:
       resources:
