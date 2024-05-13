@@ -41,6 +41,8 @@ RUN pip3 install -U pip
 RUN pip3 install numpy==1.23.0 llvmlite numba tensorboardX easydict pyyaml scikit-image tqdm SharedArray open3d==0.16.0 mayavi av2 kornia==0.6.8 pyquaternion
 RUN pip3 install spconv-cu116
 RUN pip3 install opencv-python==4.2.0.34
+RUN pip3 install onnx=1.16.0
+RUN pip3 install onnxsim=0.4.36
 
 ENV NVIDIA_VISIBLE_DEVICES="all" \
     NVIDIA_DRIVER_CAPABILITIES="all"

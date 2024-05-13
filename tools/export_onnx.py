@@ -3,6 +3,8 @@ import torch
 import onnx
 import onnxsim
 
+from torch.ao.quantization import fuse_modules
+
 from pcdet.config import cfg, cfg_from_yaml_file
 from pcdet.models import build_network
 from pcdet.utils import common_utils
@@ -22,11 +24,11 @@ class DummyDataset(DatasetTemplate):
 
 def parse_config():
     parser = argparse.ArgumentParser(description='arg parser')
-    parser.add_argument('--cfg_file', type=str, default='cfgs/kitti_models/second.yaml',
+    parser.add_argument('--cfg_file', type=str, default='cfgs/waymo_models/centerpoint_pillar_inference.yaml',
                         help='specify the config for demo')
     parser.add_argument('--data_path', type=str, default='demo_data',
                         help='specify the point cloud data file or directory')
-    parser.add_argument('--ckpt', type=str, default=None, help='specify the pretrained model')
+    parser.add_argument('--ckpt', type=str, default='../ckpts/waymo_iou_branch.pth', help='specify the pretrained model')
 
     args = parser.parse_args()
 
@@ -52,6 +54,11 @@ def main():
     model.cuda()
     model.eval()
 
+    # Fuse the ConvTranspose2d + BN layers
+    for deblock in model.backbone_2d.deblocks:
+        if deblock[0].__class__.__name__ == "ConvTranspose2d":
+            fuse_modules(deblock, [['0', '1']], inplace=True)
+
     # Prepare the input
     with torch.no_grad():
         for item in cfg.DATA_CONFIG.DATA_PROCESSOR:
@@ -60,16 +67,19 @@ def main():
                 max_voxels = 30000
                 max_points_per_voxel = item.MAX_POINTS_PER_VOXEL
         num_point_features = 4
-        
+
         dummy_voxels = torch.zeros(
             (max_voxels, max_points_per_voxel, num_point_features),
             dtype=torch.float32, device='cuda'
         )
         dummy_voxel_num = torch.zeros((1,), dtype=torch.int32, device='cuda')
         dummy_voxel_idxs = torch.zeros((max_voxels, 4), dtype=torch.int32, device='cuda')
-        
+
         # Export the model to ONNX
-        dummy_input = ((dummy_voxels, dummy_voxel_num, dummy_voxel_idxs),)
+        dummy_input = ({'voxels': dummy_voxels,
+                       'voxel_num_points': dummy_voxel_num,
+                       'voxel_coords': dummy_voxel_idxs,
+                       'batch_size': 1}, {})
         input_names = ['voxels', 'voxel_num', 'voxel_idxs']
         output_names = list(cfg.MODEL.DENSE_HEAD.SEPARATE_HEAD_CFG.HEAD_DICT.keys())+["score", "label"]
         torch.onnx.export(model,
@@ -84,8 +94,8 @@ def main():
         onnx_raw = onnx.load("model.onnx")
         onnx_sim, _ = onnxsim.simplify(onnx_raw)
         onnx.save(onnx_sim, "model_sim.onnx")
-    
+
     logger.info("Model exported to model.onnx")
-    
+
 if __name__ == '__main__':
     main()

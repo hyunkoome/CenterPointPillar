@@ -18,6 +18,9 @@ class CenterPoint(Detector3DTemplate):
             }
             return ret_dict, tb_dict, disp_dict
         else:
+            post_process_cfg = self.model_cfg.POST_PROCESSING
+            if post_process_cfg.get('EXPORT_ONNX', False):
+                return batch_dict['final_box_dicts']
             pred_dicts, recall_dicts = self.post_processing(batch_dict)
             return pred_dicts, recall_dicts
 
