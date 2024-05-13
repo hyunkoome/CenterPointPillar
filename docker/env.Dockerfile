@@ -43,6 +43,7 @@ RUN pip3 install spconv-cu116
 RUN pip3 install opencv-python==4.2.0.34
 RUN pip3 install onnx=1.16.0
 RUN pip3 install onnxsim=0.4.36
+RUN pip3 install onnx_graphsurgeon --extra-index-url https://pypi.ngc.nvidia.com
 
 ENV NVIDIA_VISIBLE_DEVICES="all" \
     NVIDIA_DRIVER_CAPABILITIES="all"
