@@ -407,9 +407,9 @@ class CenterHead(nn.Module):
                 pred_dict["score"] = scores
                 pred_dict["label"] = labels
                 del pred_dict["hm"]
-                if self.model_cfg.get("CORNER_LOSS", False):
-                    del pred_dict["corner"]
                 pred_dict["dim"] = pred_dict["dim"].exp()
+                if 'iou' in pred_dict:
+                    pred_dict['iou'] = (pred_dict['iou'] + 1) * 0.5
             data_dict["final_box_dicts"] = pred_dicts
             return data_dict
 
