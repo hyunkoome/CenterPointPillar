@@ -2,6 +2,7 @@ import argparse
 import torch
 import onnx
 import onnxsim
+from pathlib import Path
 
 from torch.ao.quantization import fuse_modules
 
@@ -9,6 +10,7 @@ from pcdet.config import cfg, cfg_from_yaml_file
 from pcdet.models import build_network
 from pcdet.utils import common_utils
 from pcdet.datasets import DatasetTemplate
+from modify_onnx import pillarscatter_surgeon
 
 class DummyDataset(DatasetTemplate):
     def __init__(self, dataset_cfg, class_names, training=True, root_path=None, logger=None, ext='.bin'):
@@ -36,8 +38,7 @@ def parse_config():
 
     return args, cfg
 
-def main():
-    args, cfg = parse_config()
+def convert_onnx():
     logger = common_utils.create_logger()
     logger.info("------ Convert OpenPCDet model to ONNX ------")
     dataset = DummyDataset(
@@ -64,7 +65,7 @@ def main():
         for item in cfg.DATA_CONFIG.DATA_PROCESSOR:
             if item.NAME == "transform_points_to_voxels":
                 # max_voxels = item.MAX_NUMBER_OF_VOXELS['train']
-                max_voxels = 30000
+                max_voxels = 25000
                 max_points_per_voxel = item.MAX_POINTS_PER_VOXEL
         num_point_features = 4
 
@@ -84,18 +85,34 @@ def main():
         output_names = list(cfg.MODEL.DENSE_HEAD.SEPARATE_HEAD_CFG.HEAD_DICT.keys())+["score", "label"]
         torch.onnx.export(model,
                         dummy_input,
-                        "model.onnx",
+                        onnx_raw_path,
                         export_params=True,
                         opset_version=14,
                         do_constant_folding=True,
                         keep_initializers_as_inputs=True,
                         input_names=input_names,
                         output_names=output_names)
-        onnx_raw = onnx.load("model.onnx")
+        onnx_raw = onnx.load(onnx_raw_path)
         onnx_sim, _ = onnxsim.simplify(onnx_raw)
-        onnx.save(onnx_sim, "model_sim.onnx")
+        onnx.save(onnx_sim, onnx_sim_path)
 
     logger.info("Model exported to model.onnx")
 
 if __name__ == '__main__':
-    main()
+    args, cfg = parse_config()
+
+    save_dir = Path("../onnx")
+    onnx_raw_path = save_dir / "model_raw.onnx"
+    onnx_sim_path = save_dir / "model_sim.onnx"
+    onnx_path = save_dir / "model.onnx"
+    if not save_dir.exists():
+        save_dir.mkdir(parents=True)
+
+    if not onnx_sim_path.exists():
+        print("Exporting model to ONNX...")
+        convert_onnx()
+
+    onnx_model = onnx.load(onnx_sim_path)
+    modified_model = pillarscatter_surgeon(onnx_model)
+    onnx.save(modified_model, onnx_path)
+    print("Model exported to model.onnx")
