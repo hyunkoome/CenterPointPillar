@@ -16,3 +16,5 @@ venv/
 output
 version.py
 *.onnx
+*.trt
+Release/

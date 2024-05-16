@@ -24,6 +24,16 @@ Please refer to the [docker/README.md](docker/README.md) for more details.
 cd ~/OpenPCDet
 sudo python setup.py develop
 ```
+### 4. TensorRT Build w/ Plugin
+TensorRT Plugin (PillarScatter Plugin) is required to build the TensorRT engine.
+``` shell
+cd tools/tensorrt_plugin/
+cmake -B Release -DCMAKE_BUILD_TYPE=Release && cmake --build Release
+```
+ONNX to TensorRT conversion is also required.
+``` shell
+trtexec --onnx=../../onnx/model.onnx --saveEngine=./model.trt --plugins=Release/libppscatter.so --fp16 --verbose
+```
 ## Usage
 Support the below iference methods:
 - ROS2 Python Node
