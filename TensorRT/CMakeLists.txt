@@ -1,4 +1,4 @@
-project(ppscatter LANGUAGES CXX CUDA)
+project(centerpoint LANGUAGES CXX CUDA)
 cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -22,10 +22,27 @@ include_directories(
     ${TensorRT_INCLUDE_DIR}
 )
 
+# file(GLOB_RECURSE CORE_FILES
+#     src/centerpoint/*.cu
+#     src/centerpoint/*.cpp
+# )
+
+# add_executable(centerpoint
+#     src/main.cc
+#     ${CORE_FILES}
+# )
+
+
+# target_link_libraries(centerpoint
+#     ${CUDA_LIBRARIES}
+#     ${TensorRT_LIBRARY}
+#     # ${PROJECT_NAME}_LIB
+# )
+
 ####################### libppscatter.so ##########################
-add_library(ppscatter SHARED
-    pillarscatter/pillarscatter.cpp
-    pillarscatter/pillarscatter-kernel.cu
+cuda_add_library(ppscatter SHARED
+    src/centerpoint/pillarScatter.cpp
+    src/centerpoint/pillarScatterKernels.cu
 )
 
 target_link_libraries(ppscatter

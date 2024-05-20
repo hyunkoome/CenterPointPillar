@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#ifndef _KERNEL_HPP_
+#define _KERNEL_HPP_
 
 #include <cuda.h>
 #include <cuda_fp16.h>
@@ -38,4 +38,4 @@ int pillarScatterFloatKernelLaunch(
   float *spatial_feature_data,
   cudaStream_t stream);
 
-#endif
+#endif // _KERNEL_HPP_

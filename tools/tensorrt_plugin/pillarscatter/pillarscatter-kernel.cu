@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "pillarscatter-kernel.hpp"
+#include "pillarscatter-kernel.cuh"
 #include <stdio.h>
 #include <stdlib.h>
 

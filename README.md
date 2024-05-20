@@ -32,7 +32,8 @@ cmake -B Release -DCMAKE_BUILD_TYPE=Release && cmake --build Release
 ```
 ONNX to TensorRT conversion is also required.
 ``` shell
-trtexec --onnx=../../onnx/model.onnx --saveEngine=./model.trt --plugins=Release/libppscatter.so --fp16 --verbose
+cd ~/OpenPCDet/
+trtexec --onnx=./onnx/model.onnx --saveEngine=./model.trt --plugins=./tools/tensorrt_plugin/Release/libppscatter.so --fp16 --verbose
 ```
 ## Usage
 Support the below iference methods:
