@@ -18,3 +18,4 @@ version.py
 *.onnx
 *.trt
 Release/
+.vscode/
