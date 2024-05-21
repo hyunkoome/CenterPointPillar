@@ -83,6 +83,8 @@ MODEL:
             SCORE_THRESH: 0.1
             POST_CENTER_LIMIT_RANGE: [-75.52, -75.52, -2, 75.52, 75.52, 4.0]
             MAX_OBJ_PER_SAMPLE: 500
+            USE_IOU_TO_RECTIFY_SCORE: True
+            IOU_RECTIFIER: [0.68, 0.71, 0.65]
             NMS_CONFIG:
                 NMS_TYPE: nms_gpu
                 NMS_THRESH: 0.7
