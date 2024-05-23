@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/tensorrt:22.04-py3
+FROM nvcr.io/nvidia/tensorrt:23.04-py3
 
 # Set environment variables
 ENV NVENCODE_CFLAGS "-I/usr/local/cuda/include"
@@ -31,19 +31,19 @@ rm -rf /opencv
 WORKDIR /
 ENV OpenCV_DIR=/usr/share/OpenCV
 
-# PyTorch for CUDA 11.6
-RUN pip3 install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu116
-ENV TORCH_CUDA_ARCH_LIST="3.5;5.0;6.0;6.1;7.0;7.5;8.0;8.6+PTX"
+# PyTorch for CUDA 12.1
+RUN pip install torch==2.1.1 torchvision==0.16.1 torchaudio==2.1.1 --index-url https://download.pytorch.org/whl/cu121
+ENV TORCH_CUDA_ARCH_LIST="5.0;6.0;6.1;7.0;7.5;8.0;8.6+PTX"
 
 # OpenPCDet Dependencies
 RUN apt remove python3-blinker -y
-RUN pip3 install -U pip
-RUN pip3 install numpy==1.23.0 llvmlite numba tensorboardX easydict pyyaml scikit-image tqdm SharedArray open3d==0.16.0 mayavi av2 kornia==0.6.8 pyquaternion colored
-RUN pip3 install spconv-cu116
-RUN pip3 install opencv-python==4.2.0.34
-RUN pip3 install onnx=1.16.0
-RUN pip3 install onnxsim=0.4.36
-RUN pip3 install onnx_graphsurgeon --extra-index-url https://pypi.ngc.nvidia.com
+RUN pip install -U pip
+RUN pip install numpy==1.23.0 llvmlite numba tensorboardX easydict pyyaml scikit-image tqdm SharedArray open3d==0.16.0 mayavi av2 kornia==0.6.8 pyquaternion colored
+RUN pip install spconv-cu120
+RUN pip install opencv-python==4.2.0.34
+RUN pip install onnx==1.16.0
+RUN pip install onnxsim==0.4.36
+RUN pip install onnx_graphsurgeon --extra-index-url https://pypi.ngc.nvidia.com
 
 ENV NVIDIA_VISIBLE_DEVICES="all" \
     NVIDIA_DRIVER_CAPABILITIES="all"
