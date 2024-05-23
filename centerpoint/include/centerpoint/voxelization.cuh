@@ -1,32 +1,7 @@
 #ifndef _VOXELIZATION_CUH_
 #define _VOXELIZATION_CUH_
 
-#include <cuda.h>
-#include <cuda_fp16.h>
-#include <cuda_runtime.h>
-#include <cuda_runtime_api.h>
-
-#include <iostream>
-#include <yaml-cpp/yaml.h>
-
-#define checkRuntime(call) check_runtime(call, #call, __LINE__, __FILE__)
-static inline bool check_runtime(cudaError_t e, const char *call, int line, const char *file) {
-  if (e != cudaSuccess) {
-    fprintf(stderr,
-            "CUDA Runtime error %s # %s, code = %s [ %d ] in file "
-            "%s:%d\n",
-            call, cudaGetErrorString(e), cudaGetErrorName(e), e, file, line);
-    abort();
-    return false;
-  }
-  return true;
-}
-
-namespace nvtype {
-typedef struct {
-  unsigned short __x;
-} half;
-};
+#include "centerpoint/base.hpp"
 
 static __global__ void generateVoxels_random_kernel(const float *points, size_t points_size,
         float min_x_range, float max_x_range,
@@ -103,11 +78,11 @@ public:
       // if (voxelsList_) checkRuntime(cudaFree(voxelsList_));
   }
 
-  const nvtype::half *features() { return features_input_; }
+  nvtype::half *features() { return features_input_; }
 
-  const unsigned int *coords() { return voxel_idxs_; }
+  unsigned int *coords() { return voxel_idxs_; }
 
-  const unsigned int *params() { return params_input_; }
+  unsigned int *params() { return params_input_; }
 
   void init(const YAML::Node& config) {
     setParams(config);
@@ -116,6 +91,7 @@ public:
     voxels_size_ = param_.grid_size.z * param_.grid_size.y * param_.grid_size.x
                 * param_.max_points_per_voxel * 4 * sizeof(float);
     voxel_features_size_ = param_.max_voxels * param_.max_points_per_voxel * 4 * sizeof(float);
+
     voxel_num_size_ = param_.max_voxels * sizeof(unsigned int);
     voxel_idxs_size_ = param_.max_voxels * 4 * sizeof(unsigned int);
     features_input_size_ = param_.max_voxels * param_.max_points_per_voxel * 10 * sizeof(nvtype::half);

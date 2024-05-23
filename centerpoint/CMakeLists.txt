@@ -11,6 +11,9 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
+# CUDA Flag settings
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_61,code=sm_61")
+
 # if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 #   add_compile_options(-Wall -Wextra -Wpedantic)
 # endif()
@@ -20,7 +23,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
-# find_package(PCL REQUIRED COMPONENTS common)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(pcl_conversions REQUIRED)
 find_package(CUDA REQUIRED)
@@ -53,6 +55,8 @@ include_directories(
 add_executable(centerpoint_node
   src/main.cc
   src/centerpoint/voxelization.cu
+  src/pillarscatter/pillarscatter-kernel.cu
+  src/pillarscatter/pillarscatter.cpp
 )
 
 target_link_libraries(centerpoint_node
@@ -61,6 +65,7 @@ target_link_libraries(centerpoint_node
   ${CUDA_LIBRARIES}
   ${TensorRT_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
+  stdc++fs
 )
 
 ament_target_dependencies(centerpoint_node
@@ -76,6 +81,10 @@ DESTINATION share/${PROJECT_NAME}
 )
 
 install(DIRECTORY config
+DESTINATION share/${PROJECT_NAME}
+)
+
+install(DIRECTORY model
 DESTINATION share/${PROJECT_NAME}
 )
 

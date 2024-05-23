@@ -11,6 +11,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <centerpoint/voxelization.cuh>
+#include <centerpoint/network.hpp>
 
 class CenterPoint : public rclcpp::Node
 {
@@ -18,6 +19,7 @@ public:
   CenterPoint() : Node("centerpoint")
   {
     this->declare_parameter("config_path");
+    this->declare_parameter("model_path");
     config_ = YAML::LoadFile(this->get_parameter("config_path").as_string());
     sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
       "/lidar/top/pointcloud", 1, std::bind(&CenterPoint::callback, this, std::placeholders::_1));
@@ -31,8 +33,11 @@ public:
   void init() {
     checkRuntime(cudaStreamCreate(&stream_));
     voxelization_ = std::make_shared<Voxelization>(config_["voxelization"]);
-
-    size_t capacity_points_ = 200000;
+    checkRuntime(cudaDeviceSynchronize());
+    network_ = std::make_shared<Network>(this->get_parameter("model_path").as_string(), config_["network"],
+                                         voxelization_->features(), voxelization_->coords(), voxelization_->params());
+    checkRuntime(cudaDeviceSynchronize());
+    size_t capacity_points_ = config_["centerpoint"]["max_points"].as<size_t>();
     size_t bytes_capacity_points_ = capacity_points_ * voxelization_->param_.num_feature * sizeof(float);
     checkRuntime(cudaMalloc(&input_points_device_, bytes_capacity_points_));
     checkRuntime(cudaDeviceSynchronize());
@@ -72,6 +77,12 @@ private:
     checkRuntime(cudaMemcpyAsync(input_points_device_, input_points_, bytes_points, cudaMemcpyHostToDevice, stream_));
     voxelization_->forward(input_points_device_, num_points, stream_);
     checkRuntime(cudaStreamSynchronize(stream_));
+    bool status =  network_->forward(stream_);
+    if (!status) {
+      std::cerr << "Failed to forward" << std::endl;
+      return;
+    }
+    checkRuntime(cudaStreamSynchronize(stream_));
   }
 
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sub_;
@@ -84,16 +95,14 @@ private:
 
   std::vector<float> points_;
   float* input_points_ = nullptr;
-  float* input_points_host_ = nullptr;
   float* input_points_device_ = nullptr;
 
   YAML::Node config_;
 
   std::shared_ptr<Voxelization> voxelization_ = nullptr;
+  std::shared_ptr<Network> network_           = nullptr;
 
   cudaStream_t stream_;
-public:
-  std::vector<std::vector<float>> all_points;
 
 };
 
