@@ -22,10 +22,4 @@ static inline bool check_runtime(cudaError_t e, const char *call, int line, cons
   return true;
 }
 
-namespace nvtype {
-typedef struct {
-  unsigned short __x;
-} half;
-};
-
 #endif // _BASE_HPP_

@@ -10,7 +10,7 @@
 #include <chrono>
 #include <yaml-cpp/yaml.h>
 
-#include <centerpoint/voxelization.cuh>
+#include <centerpoint/voxelization.hpp>
 #include <centerpoint/network.hpp>
 
 class CenterPoint : public rclcpp::Node
@@ -32,14 +32,17 @@ public:
 
   void init() {
     checkRuntime(cudaStreamCreate(&stream_));
+
     voxelization_ = std::make_shared<Voxelization>(config_["voxelization"]);
     checkRuntime(cudaDeviceSynchronize());
-    network_ = std::make_shared<Network>(this->get_parameter("model_path").as_string(), config_["network"],
-                                         voxelization_->features(), voxelization_->coords(), voxelization_->params());
+
+    network_ = std::make_shared<Network>(this->get_parameter("model_path").as_string(), config_["network"]);
     checkRuntime(cudaDeviceSynchronize());
+
     size_t capacity_points_ = config_["centerpoint"]["max_points"].as<size_t>();
     size_t bytes_capacity_points_ = capacity_points_ * voxelization_->param_.num_feature * sizeof(float);
     checkRuntime(cudaMalloc(&input_points_device_, bytes_capacity_points_));
+
     checkRuntime(cudaDeviceSynchronize());
   }
 
@@ -66,9 +69,12 @@ private:
     pcl::fromROSMsg(*msg, *pcl_cloud_);
     std::shuffle(pcl_cloud_->begin(), pcl_cloud_->end(), rng);
     size_t num_points = getPoints(pcl_cloud_);
-    std::cout << "num_points: " << num_points << std::endl;
 
+    start = std::chrono::steady_clock::now();
     forward(num_points);
+    end = std::chrono::steady_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "duration: " << duration.count() << " ms" << std::endl;
   }
 
   void forward(size_t num_points)
@@ -76,12 +82,7 @@ private:
     size_t bytes_points = num_points * voxelization_->param_.num_feature * sizeof(float);
     checkRuntime(cudaMemcpyAsync(input_points_device_, input_points_, bytes_points, cudaMemcpyHostToDevice, stream_));
     voxelization_->forward(input_points_device_, num_points, stream_);
-    checkRuntime(cudaStreamSynchronize(stream_));
-    bool status =  network_->forward(stream_);
-    if (!status) {
-      std::cerr << "Failed to forward" << std::endl;
-      return;
-    }
+    network_->forward(voxelization_->features(), voxelization_->coords(), voxelization_->nums(), stream_);
     checkRuntime(cudaStreamSynchronize(stream_));
   }
 

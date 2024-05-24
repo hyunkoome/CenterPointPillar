@@ -1,21 +1,27 @@
 #ifndef _NETWORK_HPP_
 #define _NETWORK_HPP_
 
+#include <memory>
+#include <fstream>
+#include <vector>
+#include <regex>
+#include <experimental/filesystem>
+
 #include "centerpoint/base.hpp"
 #include "NvInfer.h"
 #include "NvInferRuntime.h"
 #include "NvOnnxParser.h"
 #include "NvOnnxConfig.h"
 
-#include <fstream>
-#include <regex>
-#include <experimental/filesystem>
-#include <unordered_map>
+template <typename T>
+static void destroy_pointer(T *ptr) {
+  if (ptr) delete ptr;
+}
 
 class Logger : public nvinfer1::ILogger {
 public:
   void log(Severity severity, const char *msg) noexcept override {
-    if (severity == Severity::kERROR || severity == Severity::kINTERNAL_ERROR) {
+    if (severity == Severity::kERROR || severity == Severity::kINTERNAL_ERROR || severity == Severity::kWARNING) {
       std::cerr << "[NVINFER LOG]: " << msg << std::endl;
     }
   }
@@ -23,33 +29,19 @@ public:
 
 class Network {
 public:
-  Network(const std::string &model_path, const YAML::Node config,
-          nvtype::half *pillar_features, unsigned int *voxel_idxs, unsigned int *num_of_pillars)
-    : config_(config), pillar_features_(pillar_features), voxel_idxs_(voxel_idxs), num_of_pillars_(num_of_pillars) {
-    std::cout << "== Network Initialization ==" << std::endl;
-    runtime_ = nvinfer1::createInferRuntime(logger_);
+  Network(const std::string &model_path, const YAML::Node& config) {
+    std::cout << "==== Network Initialization ====" << std::endl;
 
     if (!std::experimental::filesystem::exists(model_path)) {
       buildEngine(model_path);
     }
-    else {
-      loadEngine(model_path);
-    }
+    loadEngine(model_path);
 
-    context_ = engine_->createExecutionContext();
-
-    int num_bindings = engine_->getNbBindings();
-    for (int i = 0; i < num_bindings; i++) {
-      const char *name = engine_->getBindingName(i);
-      buffer_names_.push_back(name);
-    }
-    init();
+    init(config);
+    std::cout << "================================" << std::endl;
   }
-
   ~Network() {
-    if (context_ != nullptr) { context_->destroy(); }
-    if (engine_ != nullptr) { engine_->destroy(); }
-    if (runtime_ != nullptr) { runtime_->destroy(); }
+    destroy();
 
     checkRuntime(cudaFree(center_output_));
     checkRuntime(cudaFree(center_z_output_));
@@ -58,10 +50,48 @@ public:
     checkRuntime(cudaFree(score_output_));
     checkRuntime(cudaFree(label_output_));
     checkRuntime(cudaFree(iou_output_));
-
   }
 
+  void forward(const float* voxels, const unsigned int* voxel_idxs, const unsigned int* params, void* stream) {
+    cudaStream_t _stream = reinterpret_cast<cudaStream_t>(stream);
+    engine_infer({voxels, voxel_idxs, params,
+                  center_output_, center_z_output_, rot_output_, dim_output_, score_output_, label_output_, iou_output_},
+                  _stream);
+  }
+
+
 private:
+  void init(const YAML::Node& config) {
+    unsigned int feature_x_size = config["feature_size"]["x"].as<unsigned int>();
+    unsigned int feature_y_size = config["feature_size"]["y"].as<unsigned int>();
+    unsigned int feature_size = feature_x_size * feature_y_size;
+
+    unsigned int reg_channel = config["channel"]["center"].as<unsigned int>();
+    unsigned int height_channel = config["channel"]["center_z"].as<unsigned int>();
+    unsigned int rot_channel = config["channel"]["rot"].as<unsigned int>();
+    unsigned int dim_channel = config["channel"]["dim"].as<unsigned int>();
+
+    center_size_ = feature_size * reg_channel * sizeof(float);
+    center_z_size_ = feature_size * height_channel * sizeof(float);
+    dim_size_ = feature_size * dim_channel * sizeof(float);
+    rot_size_ = feature_size * rot_channel * sizeof(float);
+    score_size_ = feature_size * sizeof(float);
+    label_size_ = feature_size * sizeof(int32_t);
+    iou_size_ = feature_size * sizeof(float);
+
+    checkRuntime(cudaMalloc((void**)&center_output_, center_size_));
+    checkRuntime(cudaMalloc((void**)&center_z_output_, center_z_size_));
+    checkRuntime(cudaMalloc((void**)&dim_output_, dim_size_));
+    checkRuntime(cudaMalloc((void**)&rot_output_, rot_size_));
+    checkRuntime(cudaMalloc((void**)&score_output_, score_size_));
+    checkRuntime(cudaMalloc((void**)&label_output_, label_size_));
+    checkRuntime(cudaMalloc((void**)&iou_output_, iou_size_));
+  }
+
+  void engine_infer(const std::vector<const void *> &bindings, void *stream, void *input_consum_event = nullptr) {
+    context_->enqueueV2((void **)bindings.data(), (cudaStream_t)stream, (cudaEvent_t *)input_consum_event);
+  }
+
   void buildEngine(const std::string& model_path) {
     std::cout << "Model file not found: " << model_path << std::endl;
     std::cout << "Start building engine..." << std::endl;
@@ -69,28 +99,22 @@ private:
     std::string onnx_path = std::regex_replace(model_path, std::regex(".trt"), ".onnx");
     std::cout << "onnx_path: " << onnx_path << std::endl;
 
-    auto builder = nvinfer1::createInferBuilder(logger_);
+    auto builder = nvinfer1::createInferBuilder(nvlogger_);
 
     auto explicitBatch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
     auto network = builder->createNetworkV2(explicitBatch);
 
-    auto parser = nvonnxparser::createParser(*network, logger_);
-    parser->parseFromFile(onnx_path.c_str(), static_cast<int>(nvinfer1::ILogger::Severity::kWARNING));
+    auto parser = nvonnxparser::createParser(*network, nvlogger_);
+    parser->parseFromFile(onnx_path.c_str(), static_cast<int>(nvinfer1::ILogger::Severity::kVERBOSE));
     onnxInfo(network);
 
     auto config = builder->createBuilderConfig();
     config->setFlag(nvinfer1::BuilderFlag::kFP16);
-    config->setMaxWorkspaceSize(size_t(1) << 30);
+    config->setMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE, 1UL << 30);
     builder->setMaxBatchSize(1);
 
-    engine_ = builder->buildEngineWithConfig(*network, *config);
-    if (engine_ == nullptr) {
-      std::cerr << "Failed to build engine" << std::endl;
-      exit(1);
-    }
-
     // save the engine
-    auto serialized_engine = engine_->serialize();
+    auto serialized_engine = builder->buildSerializedNetwork(*network, *config);
     std::fstream file(model_path, std::ifstream::out);
     if (!file.is_open()) {
       std::cerr << "Failed to save engine file" << std::endl;
@@ -100,47 +124,17 @@ private:
     file.write((char*)serialized_engine->data(), serialized_engine->size());
     file.close();
 
-    serialized_engine->destroy();
-    config->destroy();
-    parser->destroy();
-    network->destroy();
-    builder->destroy();
+    destroy_pointer(serialized_engine);
+    destroy_pointer(config);
+    destroy_pointer(parser);
+    destroy_pointer(network);
+    destroy_pointer(builder);
 
-    std::cout << "== Engine Build Complete ==" << std::endl;
-  }
-
-  void loadEngine(const std::string& model_path) {
-    std::cout << "model_path: " << model_path << std::endl;
-
-    std::fstream file(model_path, std::ifstream::in);
-    if (!file.is_open()) {
-      std::cerr << "Failed to open engine file" << std::endl;
-      exit(1);
-    }
-
-    char* data;
-    unsigned int length;
-
-    file.seekg(0, file.end);
-    length = file.tellg();
-    file.seekg(0, file.beg);
-    data = new char[length];
-    file.read(data, length);
-
-    engine_ = runtime_->deserializeCudaEngine(data, length, nullptr);
-    if (engine_ == nullptr) {
-      std::cerr << "Failed to deserialize the engine from file: " << model_path << std::endl;
-      exit(1);
-    }
-
-    file.close();
-    delete[] data;
-
-    std::cout << "== Engine Load Complete ==" << std::endl;
+    std::cout << "=== Engine Build Complete ===" << std::endl;
   }
 
   void onnxInfo(nvinfer1::INetworkDefinition *network) {
-    std::cout << "== ONNX Network Inputs ==\n";
+    std::cout << "===== ONNX Network Inputs ======\n";
     int numInputs = network->getNbInputs();
     for (int i = 0; i < numInputs; i++) {
       nvinfer1::ITensor* input = network->getInput(i);
@@ -153,7 +147,7 @@ private:
       std::cout << std::endl;
     }
 
-    std::cout << "== ONNX Network Outputs ==\n";
+    std::cout << "===== ONNX Network Outputs =====\n";
     int numOutputs = network->getNbOutputs();
     for (int i = 0; i < numOutputs; i++) {
       nvinfer1::ITensor* output = network->getOutput(i);
@@ -168,77 +162,61 @@ private:
     std::cout << "================================" << std::endl;
   }
 
-  void init() {
-    unsigned int feature_size_x = config_["feature_size"]["x"].as<unsigned int>();
-    unsigned int feature_size_y = config_["feature_size"]["y"].as<unsigned int>();
-    unsigned int feature_size = feature_size_x * feature_size_y;
+  void loadEngine(const std::string &file) {
+    std::cout << "model_path: " << file << std::endl;
 
-    center_size_ = feature_size * 2 * sizeof(float);
-    center_z_size_ = feature_size * sizeof(float);
-    dim_size_ = feature_size * 3 * sizeof(float);
-    rot_size_ = feature_size * 2 * sizeof(float);
-    score_size_ = feature_size * sizeof(float);
-    label_size_ = feature_size * sizeof(int32_t);
-    iou_size_ = feature_size * sizeof(float);
+    std::ifstream in(file, std::ios::in | std::ios::binary);
+    if (!in.is_open()) {
+      std::cerr << "Failed to open engine file" << std::endl;
+      exit(1);
+    }
 
-    checkRuntime(cudaMalloc(&center_output_, center_size_));
-    checkRuntime(cudaMalloc(&center_z_output_, center_z_size_));
-    checkRuntime(cudaMalloc(&dim_output_, dim_size_));
-    checkRuntime(cudaMalloc(&rot_output_, rot_size_));
-    checkRuntime(cudaMalloc(&score_output_, score_size_));
-    checkRuntime(cudaMalloc(&label_output_, label_size_));
-    checkRuntime(cudaMalloc(&iou_output_, iou_size_));
+    in.seekg(0, std::ios::end);
+    size_t length = in.tellg();
 
-    std::unordered_map<std::string, void*> map {
-      {"voxels", pillar_features_},
-      {"voxel_idxs", voxel_idxs_},
-      {"voxel_num", num_of_pillars_},
-      {"center", center_output_},
-      {"center_z", center_z_output_},
-      {"dim", dim_output_},
-      {"rot", rot_output_},
-      {"score", score_output_},
-      {"label", label_output_},
-      {"iou", iou_output_}
-    };
-    buffers_ = std::unique_ptr<std::unordered_map<std::string, void*>>(
-        new std::unordered_map<std::string, void*>(map));
-    // buffers_ = std::make_unique<std::unordered_map<std::string, void*>>(map);
+    std::vector<uint8_t> data;
+    if (length > 0) {
+      in.seekg(0, std::ios::beg);
+      data.resize(length);
+
+      in.read((char *)&data[0], length);
+    }
+    in.close();
+
+    if (data.empty() || data.data() == nullptr || data.size() == 0) {
+      printf("An empty file has been loaded. Please confirm your file path: %s\n", file.c_str());
+      exit(1);
+    }
+
+    runtime_ = std::shared_ptr<nvinfer1::IRuntime>(nvinfer1::createInferRuntime(nvlogger_), destroy_pointer<nvinfer1::IRuntime>);
+    engine_ = std::shared_ptr<nvinfer1::ICudaEngine>(runtime_->deserializeCudaEngine(data.data(), data.size()),
+                                                     destroy_pointer<nvinfer1::ICudaEngine>);
+    if (engine_ == nullptr) {
+      printf("Failed to deserialize the engine from file: %s\n", file.c_str());
+      exit(1);
+    }
+
+    context_ = std::shared_ptr<nvinfer1::IExecutionContext>(engine_->createExecutionContext(),
+                                                            destroy_pointer<nvinfer1::IExecutionContext>);
+
+    std::cout << "== Engine Load Complete ==" << std::endl;
   }
-public:
-  bool forward (cudaStream_t stream) {
-    std::vector<std::string> order(buffer_names_);
-    std::vector<void*> buffers;
-    buffers.resize(order.size());
-    std::transform(order.begin(), order.end(), buffers.begin(),
-                   [this](const std::string& name) { return buffers_->at(name); });
-    bool status = context_->enqueueV2(buffers.data(), stream, nullptr);
 
-    return status;
+  void destroy() {
+    context_.reset();
+    engine_.reset();
+    runtime_.reset();
   }
+
+
 private:
   // TensorRT
-  Logger logger_;
-  nvinfer1::IExecutionContext *context_ = nullptr;
-  nvinfer1::IRuntime *runtime_          = nullptr;
-  nvinfer1::ICudaEngine *engine_        = nullptr;
-  std::vector<std::string> buffer_names_;
-  std::unique_ptr<std::unordered_map<std::string, void*>> buffers_;
-
-  // Input
-  nvtype::half* pillar_features_ = nullptr;
-  unsigned int* voxel_idxs_ = nullptr;
-  unsigned int* num_of_pillars_ = nullptr;
+  Logger nvlogger_;
+  std::shared_ptr<nvinfer1::IExecutionContext> context_ = nullptr;
+  std::shared_ptr<nvinfer1::ICudaEngine> engine_        = nullptr;
+  std::shared_ptr<nvinfer1::IRuntime> runtime_          = nullptr;
 
   // Output
-  float* center_output_ = nullptr;
-  float* center_z_output_ = nullptr;
-  float* dim_output_ = nullptr;
-  float* rot_output_ = nullptr;
-  float* score_output_ = nullptr;
-  int32_t* label_output_ = nullptr;
-  float* iou_output_ = nullptr;
-
   unsigned int center_size_;
   unsigned int center_z_size_;
   unsigned int dim_size_;
@@ -247,8 +225,13 @@ private:
   unsigned int label_size_;
   unsigned int iou_size_;
 
-  // config
-  YAML::Node config_;
+  float* center_output_ = nullptr;
+  float* center_z_output_ = nullptr;
+  float* dim_output_ = nullptr;
+  float* rot_output_ = nullptr;
+  float* score_output_ = nullptr;
+  int32_t* label_output_ = nullptr;
+  float* iou_output_ = nullptr;
 };
 
 

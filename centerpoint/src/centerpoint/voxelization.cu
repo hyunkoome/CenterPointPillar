@@ -1,4 +1,4 @@
-#include "centerpoint/voxelization.cuh"
+#include "centerpoint/voxelization.hpp"
 
 const int POINTS_PER_VOXEL = 32;
 const int WARP_SIZE = 32;
@@ -133,7 +133,7 @@ static __global__ void generateFeatures_kernel(float* voxel_features,
     unsigned int* voxel_num, unsigned int* voxel_idxs, unsigned int *params,
     float voxel_x, float voxel_y, float voxel_z,
     float range_min_x, float range_min_y, float range_min_z,
-    half* features)
+    float* features)
 {
     int pillar_idx = blockIdx.x * WARPS_PER_BLOCK + threadIdx.x/WARP_SIZE;
     int point_idx = threadIdx.x % WARP_SIZE;
@@ -147,7 +147,7 @@ static __global__ void generateFeatures_kernel(float* voxel_features,
     __shared__ float4 pillarSumSM[WARPS_PER_BLOCK];
     __shared__ uint4 idxsSM[WARPS_PER_BLOCK];
     __shared__ int pointsNumSM[WARPS_PER_BLOCK];
-    __shared__ half pillarOutSM[WARPS_PER_BLOCK][WARP_SIZE][FEATURES_SIZE];
+    __shared__ float pillarOutSM[WARPS_PER_BLOCK][WARP_SIZE][FEATURES_SIZE];
 
     if (threadIdx.x < WARPS_PER_BLOCK) {
       pointsNumSM[threadIdx.x] = voxel_num[blockIdx.x * WARPS_PER_BLOCK + threadIdx.x];
@@ -191,18 +191,18 @@ static __global__ void generateFeatures_kernel(float* voxel_features,
 
     //store output
     if (point_idx < pointsNumSM[pillar_idx_inBlock]) {
-      pillarOutSM[pillar_idx_inBlock][point_idx][0] = __float2half(pillarSM[pillar_idx_inBlock][point_idx].x);
-      pillarOutSM[pillar_idx_inBlock][point_idx][1] = __float2half(pillarSM[pillar_idx_inBlock][point_idx].y);
-      pillarOutSM[pillar_idx_inBlock][point_idx][2] = __float2half(pillarSM[pillar_idx_inBlock][point_idx].z);
-      pillarOutSM[pillar_idx_inBlock][point_idx][3] = __float2half(pillarSM[pillar_idx_inBlock][point_idx].w);
+      pillarOutSM[pillar_idx_inBlock][point_idx][0] = (pillarSM[pillar_idx_inBlock][point_idx].x);
+      pillarOutSM[pillar_idx_inBlock][point_idx][1] = (pillarSM[pillar_idx_inBlock][point_idx].y);
+      pillarOutSM[pillar_idx_inBlock][point_idx][2] = (pillarSM[pillar_idx_inBlock][point_idx].z);
+      pillarOutSM[pillar_idx_inBlock][point_idx][3] = (pillarSM[pillar_idx_inBlock][point_idx].w);
 
-      pillarOutSM[pillar_idx_inBlock][point_idx][4] = __float2half(mean.x);
-      pillarOutSM[pillar_idx_inBlock][point_idx][5] = __float2half(mean.y);
-      pillarOutSM[pillar_idx_inBlock][point_idx][6] = __float2half(mean.z);
+      pillarOutSM[pillar_idx_inBlock][point_idx][4] = (mean.x);
+      pillarOutSM[pillar_idx_inBlock][point_idx][5] = (mean.y);
+      pillarOutSM[pillar_idx_inBlock][point_idx][6] = (mean.z);
 
-      pillarOutSM[pillar_idx_inBlock][point_idx][7] = __float2half(center.x);
-      pillarOutSM[pillar_idx_inBlock][point_idx][8] = __float2half(center.y);
-      pillarOutSM[pillar_idx_inBlock][point_idx][9] = __float2half(center.z);
+      pillarOutSM[pillar_idx_inBlock][point_idx][7] = (center.x);
+      pillarOutSM[pillar_idx_inBlock][point_idx][8] = (center.y);
+      pillarOutSM[pillar_idx_inBlock][point_idx][9] = (center.z);
 
     } else {
       pillarOutSM[pillar_idx_inBlock][point_idx][0] = 0;
@@ -224,7 +224,7 @@ static __global__ void generateFeatures_kernel(float* voxel_features,
     for(int i = 0; i < FEATURES_SIZE; i ++) {
       int outputSMId = pillar_idx_inBlock*WARP_SIZE*FEATURES_SIZE + i* WARP_SIZE + point_idx;
       int outputId = pillar_idx*WARP_SIZE*FEATURES_SIZE + i* WARP_SIZE + point_idx;
-      features[outputId] = ((half*)pillarOutSM)[outputSMId];
+      features[outputId] = ((float*)pillarOutSM)[outputSMId];
     }
 }
 
@@ -234,7 +234,7 @@ cudaError_t generateFeatures_launch(float* voxel_features,
     unsigned int *params, unsigned int max_voxels,
     float voxel_x, float voxel_y, float voxel_z,
     float range_min_x, float range_min_y, float range_min_z,
-    nvtype::half* features,
+    float* features,
     cudaStream_t stream)
 {
     dim3 blocks((max_voxels+WARPS_PER_BLOCK-1)/WARPS_PER_BLOCK);
@@ -247,7 +247,7 @@ cudaError_t generateFeatures_launch(float* voxel_features,
       params,
       voxel_x, voxel_y, voxel_z,
       range_min_x, range_min_y, range_min_z,
-      (half *)features);
+      (float *)features);
 
     cudaError_t err = cudaGetLastError();
     return err;

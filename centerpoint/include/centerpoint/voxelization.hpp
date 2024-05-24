@@ -35,14 +35,14 @@ static __global__ void generateFeatures_kernel(float* voxel_features,
     unsigned int* voxel_num, unsigned int* voxel_idxs, unsigned int *params,
     float voxel_x, float voxel_y, float voxel_z,
     float range_min_x, float range_min_y, float range_min_z,
-    half* features);
+    float* features);
 cudaError_t generateFeatures_launch(float* voxel_features,
     unsigned int * voxel_num,
     unsigned int* voxel_idxs,
     unsigned int *params, unsigned int max_voxels,
     float voxel_x, float voxel_y, float voxel_z,
     float range_min_x, float range_min_y, float range_min_z,
-    nvtype::half* features,
+    float* features,
     cudaStream_t stream);
 
 struct VoxelizationParameter {
@@ -78,11 +78,11 @@ public:
       // if (voxelsList_) checkRuntime(cudaFree(voxelsList_));
   }
 
-  nvtype::half *features() { return features_input_; }
+  float *features() { return features_input_; }
 
   unsigned int *coords() { return voxel_idxs_; }
 
-  unsigned int *params() { return params_input_; }
+  unsigned int *nums() { return params_input_; }
 
   void init(const YAML::Node& config) {
     setParams(config);
@@ -94,7 +94,7 @@ public:
 
     voxel_num_size_ = param_.max_voxels * sizeof(unsigned int);
     voxel_idxs_size_ = param_.max_voxels * 4 * sizeof(unsigned int);
-    features_input_size_ = param_.max_voxels * param_.max_points_per_voxel * 10 * sizeof(nvtype::half);
+    features_input_size_ = param_.max_voxels * param_.max_points_per_voxel * 10 * sizeof(float);
 
     checkRuntime(cudaMalloc((void **)&voxel_features_, voxel_features_size_));
     checkRuntime(cudaMalloc((void **)&voxel_num_, voxel_num_size_));
@@ -146,7 +146,7 @@ public:
 }
 private:
   void setParams(const YAML::Node& config) {
-    std::cout << "== Voxelization Parameters ==" << std::endl << config << std::endl;
+    std::cout << "=== Voxelization Parameters ===" << std::endl << config << std::endl;
     param_.min_range = make_float3(config["min_range"]["x"].as<float>(),
                                    config["min_range"]["y"].as<float>(),
                                    config["min_range"]["z"].as<float>());
@@ -178,7 +178,7 @@ private:
   float *voxel_features_ = nullptr;
   unsigned int *voxel_num_ = nullptr;
 
-  nvtype::half *features_input_ = nullptr;
+  float *features_input_ = nullptr;
   unsigned int *voxel_idxs_ = nullptr;
   unsigned int *params_input_ = nullptr;
 
