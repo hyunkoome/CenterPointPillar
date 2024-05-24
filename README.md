@@ -24,17 +24,6 @@ Please refer to the [docker/README.md](docker/README.md) for more details.
 cd ~/OpenPCDet
 sudo python setup.py develop
 ```
-### 4. TensorRT Build w/ Plugin
-TensorRT Plugin (PillarScatter Plugin) is required to build the TensorRT engine.
-``` shell
-cd tools/tensorrt_plugin/
-cmake -B Release -DCMAKE_BUILD_TYPE=Release && cmake --build Release
-```
-ONNX to TensorRT conversion is also required.
-``` shell
-cd ~/OpenPCDet/
-trtexec --onnx=./onnx/model.onnx --saveEngine=./model.trt --plugins=./tools/tensorrt_plugin/Release/libppscatter.so --fp16 --verbose
-```
 ## Usage
 Support the below iference methods:
 - ROS2 Python Node
@@ -46,3 +35,15 @@ python ros2_demo.py --cfg_file {cfg_path} --ckpt {ckpt_path}
 ```
 <!-- show picture sources/fig1.png-->
 <img src="sources/fig1.png" align="center" width="100%">
+
+### 2. ROS2 C++ Node
+Build the ROS2 package in your ROS2 workspace.
+``` shell
+cd ~/ && mkdir -p ros2_ws/src && cd ros2_ws/ && colcon build --symlink-install
+cd src && ln -s OPENPCDET_PATH/centerpoint .
+cd ../ && colcon build --symlink-install
+```
+Run the ROS2 Node.
+``` shell
+ros2 launch centerpoint centerpoint.launch.py
+```
