@@ -12,6 +12,7 @@
 
 #include <centerpoint/voxelization.hpp>
 #include <centerpoint/network.hpp>
+#include <centerpoint/postprocess.hpp>
 
 class CenterPoint : public rclcpp::Node
 {
@@ -36,8 +37,10 @@ public:
     voxelization_ = std::make_shared<Voxelization>(config_["voxelization"]);
     checkRuntime(cudaDeviceSynchronize());
 
-    network_ = std::make_shared<Network>(this->get_parameter("model_path").as_string(), config_["network"]);
+    network_ = std::make_shared<Network>(this->get_parameter("model_path").as_string());
     checkRuntime(cudaDeviceSynchronize());
+
+    postprocess_ = std::make_shared<PostProcess>(config_["postprocess"]);
 
     size_t capacity_points_ = config_["centerpoint"]["max_points"].as<size_t>();
     size_t bytes_capacity_points_ = capacity_points_ * voxelization_->param_.num_feature * sizeof(float);
@@ -83,6 +86,7 @@ private:
     checkRuntime(cudaMemcpyAsync(input_points_device_, input_points_, bytes_points, cudaMemcpyHostToDevice, stream_));
     voxelization_->forward(input_points_device_, num_points, stream_);
     network_->forward(voxelization_->features(), voxelization_->coords(), voxelization_->nums(), stream_);
+    postprocess_->forward();
     checkRuntime(cudaStreamSynchronize(stream_));
   }
 
@@ -102,6 +106,7 @@ private:
 
   std::shared_ptr<Voxelization> voxelization_ = nullptr;
   std::shared_ptr<Network> network_           = nullptr;
+  std::shared_ptr<PostProcess> postprocess_   = nullptr;
 
   cudaStream_t stream_;
 
