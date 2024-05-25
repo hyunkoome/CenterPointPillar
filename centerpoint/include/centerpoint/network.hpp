@@ -29,7 +29,7 @@ public:
 
 class Network {
 public:
-  Network(const std::string &model_path, const YAML::Node& config) {
+  Network(const std::string &model_path) {
     std::cout << "==== Network Initialization ====" << std::endl;
 
     if (!std::experimental::filesystem::exists(model_path)) {
@@ -37,7 +37,7 @@ public:
     }
     loadEngine(model_path);
 
-    init(config);
+    init();
     std::cout << "================================" << std::endl;
   }
   ~Network() {
@@ -61,31 +61,26 @@ public:
 
 
 private:
-  void init(const YAML::Node& config) {
-    unsigned int feature_x_size = config["feature_size"]["x"].as<unsigned int>();
-    unsigned int feature_y_size = config["feature_size"]["y"].as<unsigned int>();
+  void init() {
+    unsigned int feature_y_size = engine_->getTensorShape("center").d[2];
+    unsigned int feature_x_size = engine_->getTensorShape("center").d[3];
     unsigned int feature_size = feature_x_size * feature_y_size;
 
-    unsigned int reg_channel = config["channel"]["center"].as<unsigned int>();
-    unsigned int height_channel = config["channel"]["center_z"].as<unsigned int>();
-    unsigned int rot_channel = config["channel"]["rot"].as<unsigned int>();
-    unsigned int dim_channel = config["channel"]["dim"].as<unsigned int>();
+    unsigned int center_size = feature_size * 2 * sizeof(float);
+    unsigned int center_z_size = feature_size * 1 * sizeof(float);
+    unsigned int dim_size = feature_size * 3 * sizeof(float);
+    unsigned int rot_size = feature_size * 2 * sizeof(float);
+    unsigned int score_size = feature_size * sizeof(float);
+    unsigned int label_size = feature_size * sizeof(int32_t);
+    unsigned int iou_size = feature_size * sizeof(float);
 
-    center_size_ = feature_size * reg_channel * sizeof(float);
-    center_z_size_ = feature_size * height_channel * sizeof(float);
-    dim_size_ = feature_size * dim_channel * sizeof(float);
-    rot_size_ = feature_size * rot_channel * sizeof(float);
-    score_size_ = feature_size * sizeof(float);
-    label_size_ = feature_size * sizeof(int32_t);
-    iou_size_ = feature_size * sizeof(float);
-
-    checkRuntime(cudaMalloc((void**)&center_output_, center_size_));
-    checkRuntime(cudaMalloc((void**)&center_z_output_, center_z_size_));
-    checkRuntime(cudaMalloc((void**)&dim_output_, dim_size_));
-    checkRuntime(cudaMalloc((void**)&rot_output_, rot_size_));
-    checkRuntime(cudaMalloc((void**)&score_output_, score_size_));
-    checkRuntime(cudaMalloc((void**)&label_output_, label_size_));
-    checkRuntime(cudaMalloc((void**)&iou_output_, iou_size_));
+    checkRuntime(cudaMalloc((void**)&center_output_, center_size));
+    checkRuntime(cudaMalloc((void**)&center_z_output_, center_z_size));
+    checkRuntime(cudaMalloc((void**)&dim_output_, dim_size));
+    checkRuntime(cudaMalloc((void**)&rot_output_, rot_size));
+    checkRuntime(cudaMalloc((void**)&score_output_, score_size));
+    checkRuntime(cudaMalloc((void**)&label_output_, label_size));
+    checkRuntime(cudaMalloc((void**)&iou_output_, iou_size));
   }
 
   void engine_infer(const std::vector<const void *> &bindings, void *stream, void *input_consum_event = nullptr) {
@@ -217,14 +212,6 @@ private:
   std::shared_ptr<nvinfer1::IRuntime> runtime_          = nullptr;
 
   // Output
-  unsigned int center_size_;
-  unsigned int center_z_size_;
-  unsigned int dim_size_;
-  unsigned int rot_size_;
-  unsigned int score_size_;
-  unsigned int label_size_;
-  unsigned int iou_size_;
-
   float* center_output_ = nullptr;
   float* center_z_output_ = nullptr;
   float* dim_output_ = nullptr;

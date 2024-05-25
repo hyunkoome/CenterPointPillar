@@ -78,42 +78,42 @@ public:
       // if (voxelsList_) checkRuntime(cudaFree(voxelsList_));
   }
 
-  float *features() { return features_input_; }
+  const float *features() { return features_input_; }
 
-  unsigned int *coords() { return voxel_idxs_; }
+  const unsigned int *coords() { return voxel_idxs_; }
 
-  unsigned int *nums() { return params_input_; }
+  const unsigned int *nums() { return params_input_; }
 
   void init(const YAML::Node& config) {
     setParams(config);
-    mask_size_ = param_.grid_size.z * param_.grid_size.y
+    unsigned int mask_size = param_.grid_size.z * param_.grid_size.y
                 * param_.grid_size.x * sizeof(unsigned int);
-    voxels_size_ = param_.grid_size.z * param_.grid_size.y * param_.grid_size.x
+    unsigned int voxels_size = param_.grid_size.z * param_.grid_size.y * param_.grid_size.x
                 * param_.max_points_per_voxel * 4 * sizeof(float);
-    voxel_features_size_ = param_.max_voxels * param_.max_points_per_voxel * 4 * sizeof(float);
+    unsigned int voxel_features_size = param_.max_voxels * param_.max_points_per_voxel * 4 * sizeof(float);
 
-    voxel_num_size_ = param_.max_voxels * sizeof(unsigned int);
-    voxel_idxs_size_ = param_.max_voxels * 4 * sizeof(unsigned int);
-    features_input_size_ = param_.max_voxels * param_.max_points_per_voxel * 10 * sizeof(float);
+    unsigned int voxel_num_size = param_.max_voxels * sizeof(unsigned int);
+    unsigned int voxel_idxs_size = param_.max_voxels * 4 * sizeof(unsigned int);
+    unsigned int features_input_size = param_.max_voxels * param_.max_points_per_voxel * 10 * sizeof(float);
 
-    checkRuntime(cudaMalloc((void **)&voxel_features_, voxel_features_size_));
-    checkRuntime(cudaMalloc((void **)&voxel_num_, voxel_num_size_));
+    checkRuntime(cudaMalloc((void **)&voxel_features_, voxel_features_size));
+    checkRuntime(cudaMalloc((void **)&voxel_num_, voxel_num_size));
 
-    checkRuntime(cudaMalloc((void **)&features_input_, features_input_size_));
-    checkRuntime(cudaMalloc((void **)&voxel_idxs_, voxel_idxs_size_));
+    checkRuntime(cudaMalloc((void **)&features_input_, features_input_size));
+    checkRuntime(cudaMalloc((void **)&voxel_idxs_, voxel_idxs_size));
     checkRuntime(cudaMalloc((void **)&params_input_, sizeof(unsigned int)));
 
-    checkRuntime(cudaMalloc((void **)&mask_, mask_size_));
-    checkRuntime(cudaMalloc((void **)&voxels_, voxels_size_));
+    checkRuntime(cudaMalloc((void **)&mask_, mask_size));
+    checkRuntime(cudaMalloc((void **)&voxels_, voxels_size));
 
-    checkRuntime(cudaMemset(voxel_features_, 0, voxel_features_size_));
-    checkRuntime(cudaMemset(voxel_num_, 0, voxel_num_size_));
+    checkRuntime(cudaMemset(voxel_features_, 0, voxel_features_size));
+    checkRuntime(cudaMemset(voxel_num_, 0, voxel_num_size));
 
-    checkRuntime(cudaMemset(mask_, 0, mask_size_));
-    checkRuntime(cudaMemset(voxels_, 0, voxels_size_));
+    checkRuntime(cudaMemset(mask_, 0, mask_size));
+    checkRuntime(cudaMemset(voxels_, 0, voxels_size));
 
-    checkRuntime(cudaMemset(features_input_, 0, features_input_size_));
-    checkRuntime(cudaMemset(voxel_idxs_, 0, voxel_idxs_size_));
+    checkRuntime(cudaMemset(features_input_, 0, features_input_size));
+    checkRuntime(cudaMemset(voxel_idxs_, 0, voxel_idxs_size));
   }
 
   void forward(const float *_points, int num_points, void *stream) {
@@ -182,12 +182,6 @@ private:
   unsigned int *voxel_idxs_ = nullptr;
   unsigned int *params_input_ = nullptr;
 
-  unsigned int mask_size_;
-  unsigned int voxels_size_;
-  unsigned int voxel_features_size_;
-  unsigned int voxel_num_size_;
-  unsigned int voxel_idxs_size_;
-  unsigned int features_input_size_ = 0;
 };
 
 #endif
