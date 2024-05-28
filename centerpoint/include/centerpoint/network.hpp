@@ -59,6 +59,14 @@ public:
                   _stream);
   }
 
+  float* center() const { return center_output_; }
+  float* center_z() const { return center_z_output_; }
+  float* dim() const { return dim_output_; }
+  float* rot() const { return rot_output_; }
+  float* score() const { return score_output_; }
+  int32_t* label() const { return label_output_; }
+  float* iou() const { return iou_output_; }
+
 
 private:
   void init() {

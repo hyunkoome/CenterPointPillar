@@ -23,6 +23,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(pcl_conversions REQUIRED)
 find_package(CUDA REQUIRED)
@@ -55,6 +56,7 @@ include_directories(
 add_executable(centerpoint_node
   src/main.cc
   src/centerpoint/voxelization.cu
+  src/centerpoint/postprocess.cu
   src/pillarscatter/pillarscatter-kernel.cu
   src/pillarscatter/pillarscatter.cpp
 )
@@ -71,6 +73,7 @@ target_link_libraries(centerpoint_node
 ament_target_dependencies(centerpoint_node
   "rclcpp"
   "sensor_msgs"
+  "visualization_msgs"
   "pcl_conversions")
 
 install(TARGETS centerpoint_node

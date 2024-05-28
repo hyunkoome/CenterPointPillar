@@ -22,4 +22,16 @@ static inline bool check_runtime(cudaError_t e, const char *call, int line, cons
   return true;
 }
 
+struct Box{
+  float x;
+  float y;
+  float z;
+  float w;
+  float l;
+  float h;
+  float rt;
+  int id;
+  float score;
+};
+
 #endif // _BASE_HPP_
