@@ -65,7 +65,7 @@ int PostProcess::forward(const float* reg, const float* height, const float* dim
                                *host_detections_num_ * BOX_CHANNEL * sizeof(float),
                                cudaMemcpyDeviceToHost, _stream));
   std::sort(boxes_pre_nms_.begin(), boxes_pre_nms_.end(),
-            [](const float9& a, const float9& b) { return a.val[7] > b.val[7]; });
+            [](const Box& a, const Box& b) { return a.val[7] > b.val[7]; });
   checkRuntime(cudaMemcpyAsync(dev_detections_, boxes_pre_nms_.data(),
                                *host_detections_num_ * BOX_CHANNEL * sizeof(float),
                                cudaMemcpyHostToDevice, _stream));
@@ -96,7 +96,7 @@ int PostProcess::forward(const float* reg, const float* height, const float* dim
   return boxes_post_nms_.size();
 }
 
-std::vector<float9>* PostProcess::getBoxes()
+std::vector<Box>* PostProcess::getBoxes()
 {
   return &boxes_post_nms_;
 }

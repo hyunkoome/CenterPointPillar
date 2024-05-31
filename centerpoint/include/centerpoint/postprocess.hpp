@@ -43,7 +43,7 @@ PostProcess(const YAML::Node& config);
 int forward(const float* reg, const float* height, const float* dim, const float* rot,
             const float* score, const int32_t* cls, const float* iou,
             void * stream);
-std::vector<float9>* getBoxes();
+std::vector<Box>* getBoxes();
 
 private:
 void memoryInit(const YAML::Node& config);
@@ -62,8 +62,8 @@ float score_threshold_;
 float iou_threshold_;
 
 std::vector<float> iou_rectify_;
-std::vector<float9> boxes_pre_nms_;
-std::vector<float9> boxes_post_nms_;
+std::vector<Box> boxes_pre_nms_;
+std::vector<Box> boxes_post_nms_;
 
 PostProcessParameter param_;
 };

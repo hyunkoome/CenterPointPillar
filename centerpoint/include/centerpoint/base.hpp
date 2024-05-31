@@ -22,16 +22,17 @@ static inline bool check_runtime(cudaError_t e, const char *call, int line, cons
   return true;
 }
 
-struct Box{
-  float x;
-  float y;
-  float z;
-  float w;
-  float l;
-  float h;
-  float rt;
-  int id;
-  float score;
+struct Box {
+  float val[9];
+  float x() const { return val[0]; }
+  float y() const { return val[1]; }
+  float z() const { return val[2]; }
+  float l() const { return val[3]; }
+  float w() const { return val[4]; }
+  float h() const { return val[5]; }
+  float yaw() const { return val[6]; }
+  float score() const { return val[7]; }
+  int cls() const { return static_cast<int>(val[8]); }
 };
 
 #endif // _BASE_HPP_
