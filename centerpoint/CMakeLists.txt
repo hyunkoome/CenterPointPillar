@@ -49,20 +49,19 @@ include_directories(
   ${YAML_CPP_INCLUDE_DIRS}
 )
 
-# add_library(centerpoint_lib
-#   src/centerpoint/voxelization.cu
-# )
-
 add_executable(centerpoint_node
   src/main.cc
+  src/centerpoint/centerpoint.cc
+  src/centerpoint/network.cc
   src/centerpoint/voxelization.cu
+  src/centerpoint/voxelization.cc
   src/centerpoint/postprocess.cu
+  src/centerpoint/postprocess.cc
   src/pillarscatter/pillarscatter-kernel.cu
-  src/pillarscatter/pillarscatter.cpp
+  src/pillarscatter/pillarscatter.cc
 )
 
 target_link_libraries(centerpoint_node
-  # ${centerpoint_lib}
   ${PCL_LIBRARIES}
   ${CUDA_LIBRARIES}
   ${TensorRT_LIBRARIES}
