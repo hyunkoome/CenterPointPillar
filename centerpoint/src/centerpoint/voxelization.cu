@@ -5,16 +5,7 @@ const int WARP_SIZE = 32;
 const int WARPS_PER_BLOCK = 4;
 const int FEATURES_SIZE = 10;
 
-int3 VoxelizationParameter::compute_grid_size(const float3 &max_range, const float3 &min_range,
-                                                      const float3 &voxel_size) {
-  int3 size;
-  size.x = static_cast<int>(std::round((max_range.x - min_range.x) / voxel_size.x));
-  size.y = static_cast<int>(std::round((max_range.y - min_range.y) / voxel_size.y));
-  size.z = static_cast<int>(std::round((max_range.z - min_range.z) / voxel_size.z));
-  return size;
-}
-
-static __global__ void generateVoxels_random_kernel(const float *points, size_t points_size,
+__global__ void generateVoxels_random_kernel(const float *points, size_t points_size,
         float min_x_range, float max_x_range,
         float min_y_range, float max_y_range,
         float min_z_range, float max_z_range,
@@ -69,7 +60,7 @@ cudaError_t generateVoxels_random_launch(const float *points, size_t points_size
   return err;
 }
 
-static __global__ void generateBaseFeatures_kernel(unsigned int *mask, float *voxels,
+__global__ void generateBaseFeatures_kernel(unsigned int *mask, float *voxels,
         int grid_y_size, int grid_x_size,
         unsigned int *pillar_num,
         float *voxel_features,
@@ -129,7 +120,7 @@ cudaError_t generateBaseFeatures_launch(unsigned int *mask, float *voxels,
 }
 
 // 4 channels -> 10 channels
-static __global__ void generateFeatures_kernel(float* voxel_features,
+__global__ void generateFeatures_kernel(float* voxel_features,
     unsigned int* voxel_num, unsigned int* voxel_idxs, unsigned int *params,
     float voxel_x, float voxel_y, float voxel_z,
     float range_min_x, float range_min_y, float range_min_z,
