@@ -15,3 +15,7 @@ venv/
 *.bin
 output
 version.py
+*.onnx
+*.trt
+Release/
+.vscode/

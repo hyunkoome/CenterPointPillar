@@ -1,0 +1,37 @@
+centerpoint:
+  max_points: 200000
+  pub: "/centerpoint/boxes"
+  sub: "/lidar/concatenated/pointcloud"
+  score_threshold: 0.5
+
+voxelization:
+  min_range:
+    x: -75.52
+    y: -75.52
+    z: -2
+  max_range:
+    x: 75.52
+    y: 75.52
+    z: 4.0
+  voxel_size:
+    x: 0.32
+    y: 0.32
+    z: 6.0
+  max_voxels: 25000
+  max_points_per_voxel: 32
+  num_feature: 4
+  num_voxel_feature: 10
+
+postprocess:
+  iou: [0.68, 0.71, 0.65]
+  nms:
+    pre_max: 1000
+    post_max: 200
+    iou_threshold: 0.3
+  feature_x_size: 118
+  feature_y_size: 118
+  out_size_factor: 4
+  pillar_x_size: 0.32
+  pillar_y_size: 0.32
+  min_x_range: -75.52
+  min_y_range: -75.52

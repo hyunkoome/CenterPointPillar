@@ -399,6 +399,20 @@ class CenterHead(nn.Module):
 
         self.forward_ret_dict['pred_dicts'] = pred_dicts
 
+        post_process_cfg = self.model_cfg.POST_PROCESSING
+        if post_process_cfg.get("EXPORT_ONNX", False):
+            for idx, pred_dict in enumerate(pred_dicts):
+                hm = pred_dict["hm"].sigmoid()
+                scores, labels = torch.max(hm, dim=1, keepdim=True)
+                pred_dict["score"] = scores
+                pred_dict["label"] = labels
+                del pred_dict["hm"]
+                pred_dict["dim"] = pred_dict["dim"].exp()
+                if 'iou' in pred_dict:
+                    pred_dict['iou'] = (pred_dict['iou'] + 1) * 0.5
+            data_dict["final_box_dicts"] = pred_dicts
+            return data_dict
+
         if not self.training or self.predict_boxes_when_training:
             pred_dicts = self.generate_predicted_boxes(
                 data_dict['batch_size'], pred_dicts
