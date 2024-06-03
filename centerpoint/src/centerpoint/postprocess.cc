@@ -2,14 +2,10 @@
 
 PostProcess::PostProcess(const YAML::Node& config)
 {
-  iou_rectify_ = config["iou"].as<std::vector<float>>();
-  iou_threshold_ = config["nms"]["iou_threshold"].as<float>();
-  nms_pre_max_size_ = config["nms"]["pre_max"].as<unsigned int>();
-  nms_post_max_size_ = config["nms"]["post_max"].as<unsigned int>();
-
+  setParams(config);
   boxes_pre_nms_.reserve(nms_pre_max_size_);
   boxes_post_nms_.reserve(nms_post_max_size_);
-  memoryInit(config);
+  memoryInit();
 }
 
 PostProcess::~PostProcess()
@@ -20,8 +16,14 @@ PostProcess::~PostProcess()
   checkRuntime(cudaFreeHost(host_mask_));
 }
 
-void PostProcess::memoryInit(const YAML::Node& config)
+void PostProcess::setParams(const YAML::Node& config)
 {
+  std::cout << "=== PostProcess Parameters ===" << std::endl << config << std::endl;
+  iou_rectify_ = config["iou"].as<std::vector<float>>();
+  iou_threshold_ = config["nms"]["iou_threshold"].as<float>();
+  nms_pre_max_size_ = config["nms"]["pre_max"].as<unsigned int>();
+  nms_post_max_size_ = config["nms"]["post_max"].as<unsigned int>();
+
   param_.feature_x_size = config["feature_x_size"].as<int>();
   param_.feature_y_size = config["feature_y_size"].as<int>();
   param_.out_size_factor = config["out_size_factor"].as<int>();
@@ -29,7 +31,11 @@ void PostProcess::memoryInit(const YAML::Node& config)
   param_.pillar_y_size = config["pillar_y_size"].as<float>();
   param_.min_x_range = config["min_x_range"].as<float>();
   param_.min_y_range = config["min_y_range"].as<float>();
+  std::cout << "================================" << std::endl;
+}
 
+void PostProcess::memoryInit()
+{
   host_mask_size_ = nms_pre_max_size_ * DIVUP(nms_pre_max_size_, NMS_THREADS_PER_BLOCK) * sizeof(uint64_t);
 
   checkRuntime(cudaMalloc((void**)&dev_detections_, nms_pre_max_size_ * BOX_CHANNEL * sizeof(float)));

@@ -46,7 +46,8 @@ int forward(const float* reg, const float* height, const float* dim, const float
 std::vector<Box>* getBoxes();
 
 private:
-void memoryInit(const YAML::Node& config);
+void memoryInit();
+void setParams(const YAML::Node& config);
 
 private:
 unsigned int* host_detections_num_ = nullptr;
