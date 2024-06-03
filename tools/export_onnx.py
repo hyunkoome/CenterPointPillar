@@ -58,9 +58,9 @@ def convert_onnx():
     model.eval()
 
     # Fuse the ConvTranspose2d + BN layers
-    # for deblock in model.backbone_2d.deblocks:
-    #     if deblock[0].__class__.__name__ == "ConvTranspose2d":
-    #         fuse_modules(deblock, [['0', '1']], inplace=True)
+    for deblock in model.backbone_2d.deblocks:
+        if deblock[0].__class__.__name__ == "ConvTranspose2d":
+            fuse_modules(deblock, [['0', '1']], inplace=True)
 
     # Prepare the input
     with torch.no_grad():
