@@ -2,6 +2,7 @@ import argparse
 import torch
 import onnx
 import onnxsim
+import yaml
 from pathlib import Path
 
 from torch.ao.quantization import fuse_modules
@@ -31,6 +32,7 @@ def parse_config():
     parser.add_argument('--data_path', type=str, default='demo_data',
                         help='specify the point cloud data file or directory')
     parser.add_argument('--ckpt', type=str, default='../ckpts/waymo_iou_branch.pth', help='specify the pretrained model')
+    parser.add_argument('--max_voxels', type=int, default='25000', help='specify max number of voxels')
 
     args = parser.parse_args()
 
@@ -65,7 +67,7 @@ def convert_onnx():
         for item in cfg.DATA_CONFIG.DATA_PROCESSOR:
             if item.NAME == "transform_points_to_voxels":
                 # max_voxels = item.MAX_NUMBER_OF_VOXELS['train']
-                max_voxels = 25000
+                max_voxels = args.max_voxels
                 max_points_per_voxel = item.MAX_POINTS_PER_VOXEL
         num_point_features = 4
 
@@ -98,6 +100,55 @@ def convert_onnx():
 
     logger.info("Model exported to model.onnx")
 
+def export_config():
+    centerpoint_dict = {}
+    centerpoint_dict['max_points'] = 200000
+    centerpoint_dict['pub'] = "/centerpoint/boxes"
+    centerpoint_dict['sub'] = "/lidar/concatenated/pointcloud"
+    centerpoint_dict['score_threshold'] = 0.5
+
+    voxelization_dict = {'min_range': {},
+                         'max_range': {},
+                         'voxel_size': {}}
+    for item in cfg.DATA_CONFIG.DATA_PROCESSOR:
+        if item.NAME == "transform_points_to_voxels":
+            voxelization_config = item
+    voxelization_dict['min_range']['x'] = cfg.DATA_CONFIG.POINT_CLOUD_RANGE[0]
+    voxelization_dict['min_range']['y'] = cfg.DATA_CONFIG.POINT_CLOUD_RANGE[1]
+    voxelization_dict['min_range']['z'] = cfg.DATA_CONFIG.POINT_CLOUD_RANGE[2]
+    voxelization_dict['max_range']['x'] = cfg.DATA_CONFIG.POINT_CLOUD_RANGE[3]
+    voxelization_dict['max_range']['y'] = cfg.DATA_CONFIG.POINT_CLOUD_RANGE[4]
+    voxelization_dict['max_range']['z'] = cfg.DATA_CONFIG.POINT_CLOUD_RANGE[5]
+    voxelization_dict['voxel_size']['x'] = voxelization_config.VOXEL_SIZE[0]
+    voxelization_dict['voxel_size']['y'] = voxelization_config.VOXEL_SIZE[1]
+    voxelization_dict['voxel_size']['z'] = voxelization_config.VOXEL_SIZE[2]
+    voxelization_dict['max_voxels'] = args.max_voxels
+    voxelization_dict['max_points_per_voxel'] = voxelization_config.MAX_POINTS_PER_VOXEL
+    voxelization_dict['num_feature'] = len(cfg.DATA_CONFIG.POINT_FEATURE_ENCODING.used_feature_list)
+    voxelization_dict['num_voxel_feature'] = 10
+
+    postprocess_dict = {'nms': {}}
+    postprocess_config = cfg.MODEL.DENSE_HEAD.POST_PROCESSING
+    postprocess_dict['iou'] = postprocess_config.IOU_RECTIFIER
+    postprocess_dict['nms']['pre_max'] = postprocess_config.NMS_CONFIG.NMS_PRE_MAXSIZE
+    postprocess_dict['nms']['post_max'] = postprocess_config.NMS_CONFIG.NMS_POST_MAXSIZE
+    postprocess_dict['nms']['iou_threshold'] = postprocess_config.NMS_CONFIG.NMS_THRESH
+    postprocess_dict['out_size_factor'] = cfg.MODEL.DENSE_HEAD.TARGET_ASSIGNER_CONFIG.FEATURE_MAP_STRIDE
+    postprocess_dict['feature_x_size'] = round((voxelization_dict['max_range']['x'] - voxelization_dict['min_range']['x']) / voxelization_dict['voxel_size']['x'] / postprocess_dict['out_size_factor'])
+    postprocess_dict['feature_y_size'] = round((voxelization_dict['max_range']['y'] - voxelization_dict['min_range']['y']) / voxelization_dict['voxel_size']['y'] / postprocess_dict['out_size_factor'])
+    postprocess_dict['pillar_x_size'] = voxelization_dict['voxel_size']['x']
+    postprocess_dict['pillar_y_size'] = voxelization_dict['voxel_size']['y']
+    postprocess_dict['min_x_range'] = voxelization_dict['min_range']['x']
+    postprocess_dict['min_y_range'] = voxelization_dict['min_range']['y']
+
+    save_path = Path("../") / "config.yaml"
+    cfg_output = {'centerpoint': centerpoint_dict,
+                    'voxelization': voxelization_dict,
+                    'postprocess': postprocess_dict}
+    with open(save_path, 'w') as f:
+        yaml.dump(cfg_output, f, default_flow_style=False)
+    print(f"Config exported to {save_path}")
+
 if __name__ == '__main__':
     args, cfg = parse_config()
 
@@ -112,7 +163,11 @@ if __name__ == '__main__':
         print("Exporting model to ONNX...")
         convert_onnx()
 
-    onnx_model = onnx.load(onnx_sim_path)
-    modified_model = pillarscatter_surgeon(onnx_model)
-    onnx.save(modified_model, onnx_path)
-    print("Model exported to model.onnx")
+    if not onnx_path.exists():
+        print("Model optimization...")
+        onnx_model = onnx.load(onnx_sim_path)
+        modified_model = pillarscatter_surgeon(onnx_model)
+        onnx.save(modified_model, onnx_path)
+        print("Model exported to model.onnx")
+
+    export_config()
