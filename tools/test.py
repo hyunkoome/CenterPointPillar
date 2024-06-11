@@ -17,6 +17,11 @@ from pcdet.datasets import build_dataloader
 from pcdet.models import build_network
 from pcdet.utils import common_utils
 
+try:
+    import cp
+    print("Pybind imported!!")
+except:
+    print("No Pybind!!")
 
 def parse_config():
     parser = argparse.ArgumentParser(description='arg parser')
@@ -40,6 +45,7 @@ def parse_config():
     parser.add_argument('--ckpt_dir', type=str, default=None, help='specify a ckpt directory to be evaluated if needed')
     parser.add_argument('--save_to_file', action='store_true', default=False, help='')
     parser.add_argument('--infer_time', action='store_true', default=False, help='calculate inference latency')
+    parser.add_argument('--TensorRT', action='store_true', default=False, help='Evaluation with TensorRT model')
 
     args = parser.parse_args()
 
@@ -67,6 +73,11 @@ def eval_single_ckpt(model, test_loader, args, eval_output_dir, logger, epoch_id
         result_dir=eval_output_dir
     )
 
+def eval_single_ckpt_with_TensorRT(model, test_loader, args, eval_output_dir, logger, epoch_id, dist_test=False):
+    eval_utils.eval_one_epoch_with_tensorrt(
+        cfg, args, model, test_loader, epoch_id, logger, dist_test=dist_test,
+        result_dir=eval_output_dir
+    )
 
 def get_no_evaluated_ckpt(ckpt_dir, ckpt_record_file, args):
     ckpt_list = glob.glob(os.path.join(ckpt_dir, '*checkpoint_epoch_*.pth'))
@@ -158,6 +169,8 @@ def main():
     else:
         assert args.batch_size % total_gpus == 0, 'Batch size should match the number of gpus'
         args.batch_size = args.batch_size // total_gpus
+    if args.TensorRT:
+        args.batch_size = 1
 
     output_dir = cfg.ROOT_DIR / 'output' / cfg.EXP_GROUP_PATH / cfg.TAG / args.extra_tag
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -198,12 +211,21 @@ def main():
         dist=dist_test, workers=args.workers, logger=logger, training=False
     )
 
-    model = build_network(model_cfg=cfg.MODEL, num_class=len(cfg.CLASS_NAMES), dataset=test_set)
+    if args.TensorRT:
+        model_path = "/home/jr/OpenPCDet/centerpoint/model/model.trt"
+        config_path = "/home/jr/OpenPCDet/centerpoint/config/config.yaml"
+        model = cp.CenterPoint(config_path, model_path)
+    else:
+        model = build_network(model_cfg=cfg.MODEL, num_class=len(cfg.CLASS_NAMES), dataset=test_set)
+
     with torch.no_grad():
-        if args.eval_all:
-            repeat_eval_ckpt(model, test_loader, args, eval_output_dir, logger, ckpt_dir, dist_test=dist_test)
+        if args.TensorRT:
+            eval_single_ckpt_with_TensorRT(model, test_loader, args, eval_output_dir, logger, epoch_id, dist_test=dist_test)
         else:
-            eval_single_ckpt(model, test_loader, args, eval_output_dir, logger, epoch_id, dist_test=dist_test)
+            if args.eval_all:
+                repeat_eval_ckpt(model, test_loader, args, eval_output_dir, logger, ckpt_dir, dist_test=dist_test)
+            else:
+                eval_single_ckpt(model, test_loader, args, eval_output_dir, logger, epoch_id, dist_test=dist_test)
 
 
 if __name__ == '__main__':
