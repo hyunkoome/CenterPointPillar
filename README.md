@@ -8,7 +8,7 @@ This repository is dedicated solely to inferencing the CenterPoint-pointpillar m
 
 
 ## Environment
-### 1. Docker Environment
+### 0. Docker Environment
 - Base Image: [`nvcr.io/nvidia/tensorrt:23.04-py3`](https://docs.nvidia.com/deeplearning/tensorrt/container-release-notes/index.html#rel_23-04)
 - OS: Ubuntu 20.24
 - CUDA: 12.1.0
@@ -16,8 +16,15 @@ This repository is dedicated solely to inferencing the CenterPoint-pointpillar m
 - TensorRT: 8.6.1
 - python: 3.8
 - Pytorch: 2.1.1
-### 2. Docker Container Start
+
+### 1. Install Docker Engine on Ubuntu
+Please refer to the [`docker.docs`](https://docs.docker.com/engine/install/ubuntu/) for more details.
+
+### 2. Clone this repository
+
+### 3. Docker Container Start
 Please refer to the [docker/README.md](docker/README.md) for more details.
+
 ### 3. PCDET Installation
 ``` shell
 cd ~/OpenPCDet
