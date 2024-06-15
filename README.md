@@ -23,17 +23,40 @@ Please refer to the [`docker.docs`](https://docs.docker.com/engine/install/ubunt
 ### 2. Clone this repository
 
 ### 3. Docker Container Start
+
+#### 3.1 Build Through Dockerfile
+Build the docker base image.
+```shell script
+docker build -f docker/env.Dockerfile -t openpcdet-env docker/
+```
+
+#### 3.2 Container Start
+Start the container.
+``` shell
+docker compose up --build -d
+```
+
 Please refer to the [docker/README.md](docker/README.md) for more details.
 
-### 3. PCDET Installation
+### 4. PCDET Installation
+
+4.1 Execute the container
+
+```
+docker exec -it centerpoint bash
+```
+
+4.2 Install OpenPCDet
 ``` shell
 cd ~/OpenPCDet
 sudo python setup.py develop
 ```
+
 ## Usage
 Support the below iference methods:
 - ROS2 Python Node
 - ROS2 C++ Node (Comming soon....)
+
 ### 1. ROS2 Python Node
 ``` shell
 cd tools/
