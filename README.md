@@ -125,9 +125,28 @@ source ~/ros2_ws/install/setup.bash
 ros2 launch centerpoint centerpoint.launch.py
 ```
 
-Once run ros2 centerpoint node, create tensorRT file, automatically.
+Once running ros2 centerpoint node, create tensorRT file to the same folder having onnx file, automatically.
+
+### 3.4 ROS2 play bagfile on the container
+```
+docker exec -it centerpoint bash
+cd /Dataset
+ros2 bag play segment-10359308928573410754_720_000_740_000_with_camera_labels/  # ros2 bag play folder_with_ros2bag
+```
+
+### 3.5 Run rviz2
+``` shell
+docker exec -it centerpoint bash
+rviz2
+```
+- Fixed Frame: base_link
+- Add -> By display type -> PountCloud2 -> Topic: /lidar/top/pointcloud, Size(m): 0.03
+- Add -> By topic -> /boxes/MarkerArray
+
+<img src="sources/rviz2_ros_cpp.png" align="center" width="100%">
 
 ## 4) Evaluation
+
 To evaluate TensorRT results, you have to wrap the c++ to python API.
 ### 4.1 Build Python module
 ``` shell
