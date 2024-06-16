@@ -92,7 +92,9 @@ Build the ROS2 package in your ROS2 workspace.
 ``` shell
 cd ~/ && mkdir -p ros2_ws/src && cd ros2_ws/ && colcon build --symlink-install
 cd src && ln -s OPENPCDET_PATH/centerpoint .
-cd ../ && colcon build --symlink-install
+cd src/centerpoint && mkdir model
+cd ~/ros2_ws && colcon build --symlink-install
+source ~/ros2_ws/install/setup.bash
 ```
 ### 3.2 Run the ROS2 Node.
 ``` shell
