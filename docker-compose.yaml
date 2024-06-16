@@ -19,8 +19,7 @@ services:
       - $HOME/.ssh:/home/${USER}/.ssh
       - $HOME/.config:/home/${USER}/.config
       - $HOME/.gitconfig:/home/${USER}/.gitconfig
-      - ~/Dataset:/Dataset
-      - ~/DATA/NAS/nfsRoot:/nfsRoot
+      - ~/DATA/NAS/nfsRoot:/Dataset
     working_dir: /home/${USER}/OpenPCDet
     environment:
       - DISPLAY=$DISPLAY
