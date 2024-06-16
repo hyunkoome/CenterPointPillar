@@ -87,7 +87,30 @@ rviz2
 
 ## 3) Usage: Inference Method using ROS2 *C++* Node on the Container ENV (Comming soon....)
 
-### 3.1 ROS2 C++ Node
+### 3.1 Convert Onnx file from Pytorch 'pth' model file
+``` shell
+docker exec -it centerpoint bash
+cd ~/OpenPCDet/tools
+python export_onnx.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt ../ckpt/checkpoint_epoch_24.pth
+
+```
+<img src="sources/cmd_onnx.png" align="center" width="100%">
+
+As a result, create 3 onnx files on the `CenterPoint/onnx`
+- model_raw.onnx: pth를 onnx 로 변환한 순수 버전
+- model_sim.onnx: onnx 그래프 간단화해주는 라이브러리 사용한 버전
+- model.onnx: sim 모델을 gragh surgeon으로 수정한 최종 버전, tensorRT plugin 사용하려면 gragh surgeon이 필수임.
+
+<img src="sources/three_onnx_models.png" align="center" width="572">
+
+### 3.2 Copy Onnx file to the `model` folder in ROS2  
+``` shell
+cd ~/OpenPCDet/
+cp onnx/model.onnx centerpoint/model/
+
+```
+
+### 3.2 ROS2 C++ Node
 Build the ROS2 package in your ROS2 workspace.
 ``` shell
 cd ~/ && mkdir -p ros2_ws/src && cd ros2_ws/ && colcon build --symlink-install
@@ -96,10 +119,13 @@ cd src/centerpoint && mkdir model
 cd ~/ros2_ws && colcon build --symlink-install
 source ~/ros2_ws/install/setup.bash
 ```
-### 3.2 Run the ROS2 Node.
+
+### 3.3 Run the ROS2 Node.
 ``` shell
 ros2 launch centerpoint centerpoint.launch.py
 ```
+
+Once run ros2 centerpoint node, create tensorRT file, automatically.
 
 ## 4) Evaluation
 To evaluate TensorRT results, you have to wrap the c++ to python API.
