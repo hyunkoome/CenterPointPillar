@@ -2,9 +2,8 @@
 
 # OpenPCDet
 
-`OpenPCDet` is a clear, simple, self-contained open source project for LiDAR-based 3D object detection. 
-
-This repository is dedicated solely to inferencing the CenterPoint-pointpillar model.
+- `OpenPCDet` is a clear, simple, self-contained open source project for LiDAR-based 3D object detection. 
+- This repository is dedicated solely to inferencing the CenterPoint-pointpillar model.
 
 # Docker Environment
 - Base Image: [`nvcr.io/nvidia/tensorrt:23.04-py3`](https://docs.nvidia.com/deeplearning/tensorrt/container-release-notes/index.html#rel_23-04)
@@ -19,10 +18,10 @@ This repository is dedicated solely to inferencing the CenterPoint-pointpillar m
 ## 1) Set Environment
 
 ### 1.2 Install Docker Engine on Ubuntu
-Please refer to the [`docker.docs`](https://docs.docker.com/engine/install/ubuntu/) for more details.
-Please refer to the [`install guide for nvidia container toolkit`](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) and [`nvidia container toolkit`](https://github.com/NVIDIA/nvidia-container-toolkit?tab=readme-ov-file) for more details.
+- Please refer to the [`docker.docs`](https://docs.docker.com/engine/install/ubuntu/) for more details.
+- Please refer to the [`install guide for nvidia container toolkit`](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) and [`nvidia container toolkit`](https://github.com/NVIDIA/nvidia-container-toolkit?tab=readme-ov-file) for more details.
 
-docker 설치 후 /var/run/docker.sock의 permission denied 발생하는 경우
+- docker 설치 후 /var/run/docker.sock의 permission denied 발생하는 경우
 ``` shell
 sudo chmod 666 /var/run/docker.sock
 ```
@@ -31,26 +30,53 @@ sudo chmod 666 /var/run/docker.sock
 
 ### 1.4 Docker Container Start
 
-#### 1.4.1 Build the docker base image
+- Build the docker base image
 ```shell script
 docker build -f docker/env.Dockerfile -t openpcdet-env docker/
 ```
 
-#### 1.4.2 Start the container.
+- Start the container.
 ``` shell
 docker compose up --build -d
 ```
 
-Please refer to the [docker/README.md](docker/README.md) for more details.
+- Please refer to the [docker/README.md](docker/README.md) for more details.
 
-### 1.5 PCDET Installation
+### 1.5 Prepare Datasets 
 
-#### 1.5.1 Execute the container
+- For Waymo datasets, Install the official `waymo-open-dataset` by running the following command:
+``` shell
+docker exec -it centerpoint bash
+pip install --upgrade pip
+sudo apt install python3-testresources
+pip install waymo-open-dataset-tf-2-12-0==1.6.4
+cd data/waymo/ 
+ln -s /Dataset/Datasets/openpcdet_waymo_v_1_3_1_trainval/raw_data/ .
+cd ~/OpenPCDet/
+```
+
+- Extract point cloud data from tfrecord and generate data infos by running the following command (it takes several hours, and you could refer to `data/waymo/waymo_processed_data_v0_5_0` to see how many records that have been processed):
+``` shell
+# only for single-frame setting
+python -m pcdet.datasets.waymo.waymo_dataset --func create_waymo_infos \
+    --cfg_file tools/cfgs/dataset_configs/waymo_dataset.yaml
+
+# for single-frame or multi-frame setting
+python -m pcdet.datasets.waymo.waymo_dataset --func create_waymo_infos \
+    --cfg_file tools/cfgs/dataset_configs/waymo_dataset_multiframe.yaml
+# Ignore 'CUDA_ERROR_NO_DEVICE' error as this process does not require GPU.
+```
+
+- Please refer to the [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for more details.
+
+### 1.6 PCDET Installation
+
+- Execute the container
 ```
 docker exec -it centerpoint bash
 ```
 
-#### 1.5.2 Install OpenPCDet
+- Install OpenPCDet
 ``` shell
 cd ~/OpenPCDet
 sudo python setup.py develop
@@ -58,34 +84,34 @@ sudo python setup.py develop
 
 ## 2) Usage: Inference Method using ROS2 *Python* Node on the Container ENV
 
-### 2.1.1 ROS2 play bagfile on the container
+### 2.1 ROS2 play bagfile on the container
 ```
 docker exec -it centerpoint bash
 cd /Dataset
 ros2 bag play segment-10359308928573410754_720_000_740_000_with_camera_labels/  # ros2 bag play folder_with_ros2bag
 ```
 
-### 2.1.2 execute ros2_demo.py on the container
+### 2.2 execute ros2_demo.py on the container
 ``` shell
 docker exec -it centerpoint bash
 cd ~/OpenPCDet/tools/
 python ros2_demo.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt ../ckpt/checkpoint_epoch_24.pth
 ```
 
-### 2.1.3 execute rviz2
+### 2.3 execute rviz2
 ``` shell
 docker exec -it centerpoint bash
 rviz2
 ```
 
-### 2.1.4 setting rviz2
+### 2.4 setting rviz2
 - Fixed Frame: base_link
 - Add -> By display type -> PountCloud2 -> Topic: /lidar/top/pointcloud, Size(m): 0.03
 - Add -> By topic -> /boxes/MarkerArray
 
 <img src="sources/rviz2_add_topic.png" align="center" width="359">
 
-### 2.1.5 run rviz2
+### 2.5 run rviz2
 
 <!-- show picture sources/fig1.png-->
 <img src="sources/rviz2.png" align="center" width="100%">
@@ -117,7 +143,7 @@ cp onnx/model.onnx centerpoint/model/
 ```
 
 ### 3.2 ROS2 C++ Node
-Build the ROS2 package in your ROS2 workspace.
+- Build the ROS2 package in your ROS2 workspace.
 ``` shell
 cd ~/ && mkdir -p ros2_ws/src && cd ros2_ws/ && colcon build --symlink-install
 cd src && ln -s OPENPCDET_PATH/centerpoint .
@@ -131,7 +157,7 @@ source ~/ros2_ws/install/setup.bash
 ros2 launch centerpoint centerpoint.launch.py
 ```
 
-Once running ros2 centerpoint node, create tensorRT file to the same folder having onnx file, automatically.
+- Once running ros2 centerpoint node, create tensorRT file to the same folder having onnx file, automatically.
 
 ### 3.4 ROS2 play bagfile on the container
 ```
@@ -153,7 +179,7 @@ rviz2
 
 ## 4) Evaluation
 
-To evaluate TensorRT results, you have to wrap the c++ to python API.
+- To evaluate TensorRT results, you have to wrap the c++ to python API.
 ### 4.1 Build Python module
 ``` shell
 cd centerpoint/pybind
