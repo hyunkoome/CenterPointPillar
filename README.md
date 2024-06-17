@@ -82,44 +82,86 @@ cd ~/OpenPCDet
 sudo python setup.py develop
 ```
 
-## 2) Usage: Inference Method using ROS2 *Python* Node on the Container ENV
+- Install pybind11
+``` shell
+cd ~/
+git clone git@github.com:pybind/pybind11.git
+cd pybind11
+cmake .
+make install
+```
 
-### 2.1 ROS2 play bagfile on the container
+- To Build Python module, you have to wrap the c++ to python API.
+``` shell
+cd ~/OpenPCDet/centerpoint/pybind
+cmake -BRelease
+cmake --build Release
+
+```
+
+- Copy Python module
+``` shell
+cd ~/OpenPCDet/
+cp centerpoint/pybind/tools/cp.cpython-38-x86_64-linux-gnu.so tools/
+```
+
+## 2) Train PCDET
+
+### 2.1 Train using Multi-GPUs (pytorch 2.x: have to use torchrun, torch_train)
+``` shell
+cd ~/OpenPCDet
+ln -s /Dataset/Train_Results/CenterPoint/ output  # you can replace `/Dataset/Train_Results/CenterPoint/` with directory you want
+cd tools/
+sh scripts/torch_train.sh 2 --cfg_file ./cfgs/waymo_models/centerpoint_pillar_train.yaml --batch_size 24
+```
+
+### 2.2 Train using Single-GPU
+``` shell
+cd ~/OpenPCDet
+ln -s /Dataset/Train_Results/CenterPoint/ output
+cd tools/
+CUDA_VISIBLE_DEVICES=1 python train.py --cfg_file ./cfgs/waymo_models/centerpoint_pillar_train.yaml --batch_size 16  # you can replace `CUDA_VISIBLE_DEVICES=1` with gpu's number you want
+```
+
+
+## 3) Usage: Inference Method using ROS2 *Python* Node on the Container ENV
+
+### 3.1 ROS2 play bagfile on the container
 ```
 docker exec -it centerpoint bash
 cd /Dataset
 ros2 bag play segment-10359308928573410754_720_000_740_000_with_camera_labels/  # ros2 bag play folder_with_ros2bag
 ```
 
-### 2.2 execute ros2_demo.py on the container
+### 3.2 execute ros2_demo.py on the container
 ``` shell
 docker exec -it centerpoint bash
 cd ~/OpenPCDet/tools/
 python ros2_demo.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt ../ckpt/checkpoint_epoch_24.pth
 ```
 
-### 2.3 execute rviz2
+### 3.3 execute rviz2
 ``` shell
 docker exec -it centerpoint bash
 rviz2
 ```
 
-### 2.4 setting rviz2
+### 3.4 setting rviz2
 - Fixed Frame: base_link
 - Add -> By display type -> PountCloud2 -> Topic: /lidar/top/pointcloud, Size(m): 0.03
 - Add -> By topic -> /boxes/MarkerArray
 
 <img src="sources/rviz2_add_topic.png" align="center" width="359">
 
-### 2.5 run rviz2
+### 3.5 run rviz2
 
 <!-- show picture sources/fig1.png-->
 <img src="sources/rviz2.png" align="center" width="100%">
 <img src="sources/fig1.png" align="center" width="100%">
 
-## 3) Usage: Inference Method using ROS2 *C++* Node on the Container ENV (Comming soon....)
+## 4) Usage: Inference Method using ROS2 *C++* Node on the Container ENV (Comming soon....)
 
-### 3.1 Convert Onnx file from Pytorch 'pth' model file
+### 4.1 Convert Onnx file from Pytorch 'pth' model file
 ``` shell
 docker exec -it centerpoint bash
 cd ~/OpenPCDet/tools
@@ -135,14 +177,14 @@ As a result, create 3 onnx files on the `CenterPoint/onnx`
 
 <img src="sources/three_onnx_models.png" align="center" width="572">
 
-### 3.2 Copy Onnx file to the `model` folder in ROS2  
+### 4.2 Copy Onnx file to the `model` folder in ROS2  
 ``` shell
 cd ~/OpenPCDet/
 cp onnx/model.onnx centerpoint/model/
 
 ```
 
-### 3.2 ROS2 C++ Node
+### 4.3 ROS2 C++ Node
 - Build the ROS2 package in your ROS2 workspace.
 ``` shell
 cd ~/ && mkdir -p ros2_ws/src && cd ros2_ws/ && colcon build --symlink-install
@@ -152,21 +194,21 @@ cd ~/ros2_ws && colcon build --symlink-install
 source ~/ros2_ws/install/setup.bash
 ```
 
-### 3.3 Run the ROS2 Node.
+### 4.4 Run the ROS2 Node.
 ``` shell
 ros2 launch centerpoint centerpoint.launch.py
 ```
 
 - Once running ros2 centerpoint node, create tensorRT file to the same folder having onnx file, automatically.
 
-### 3.4 ROS2 play bagfile on the container
+### 4.5 ROS2 play bagfile on the container
 ```
 docker exec -it centerpoint bash
 cd /Dataset
 ros2 bag play segment-10359308928573410754_720_000_740_000_with_camera_labels/  # ros2 bag play folder_with_ros2bag
 ```
 
-### 3.5 Run rviz2
+### 4.6 Run rviz2
 ``` shell
 docker exec -it centerpoint bash
 rviz2
@@ -177,23 +219,39 @@ rviz2
 
 <img src="sources/rviz2_ros_cpp.png" align="center" width="100%">
 
-## 4) Evaluation
+## 5) Evaluation
 
-- To evaluate TensorRT results, you have to wrap the c++ to python API.
-### 4.1 Build Python module
+- Install pybind11 (if you already installed in the training step, skip please)
+``` shell
+cd ~/
+git clone git@github.com:pybind/pybind11.git
+cd pybind11
+cmake .
+make install
+```
+
+- To evaluate TensorRT results, you have to wrap the c++ to python API. (if you already installed in the training step, skip please)
+- Build Python module 
 ``` shell
 cd centerpoint/pybind
 cmake -BRelease
 cmake --build Release
 ```
-### 4.2 Copy Python module
+
+- Copy Python module (if you already installed in the training step, skip please)
 ``` shell
 cp centerpoint/pybind/tools/cp.cpython-38-x86_64-linux-gnu.so tools/
+
 ```
-### 4.3 Evaluation
+
+### 5.1 Evaluation
 ``` shell
+docker exec -it centerpoint bash
+cd ~/OpenPCDet/tools/
 python test.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --TensorRT
 ```
+
+- Results as shown:
 ```
 2024-06-11 05:36:52,125   INFO
 OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/AP: 0.5793
