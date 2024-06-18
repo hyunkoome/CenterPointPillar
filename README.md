@@ -108,6 +108,8 @@ cp centerpoint/pybind/tools/cp.cpython-38-x86_64-linux-gnu.so tools/
 ## 2) Train PCDET
 
 ### 2.1 Train using Multi-GPUs (pytorch 2.x: have to use torchrun, torch_train)
+- If you use pytorch 1.x, you have to use `python -m torch.distributed.launch` i.e., `tools/scripts/dist_X.sh`. 
+- If you use pytorch 2.x, you have to use `torchrun` i.e., `tools/scripts/torch_train_X.sh`.
 ``` shell
 cd ~/OpenPCDet
 ln -s /Dataset/Train_Results/CenterPoint/ output  # you can replace `/Dataset/Train_Results/CenterPoint/` with directory you want
