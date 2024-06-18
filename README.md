@@ -85,7 +85,7 @@ sudo python setup.py develop
 - Install pybind11
 ``` shell
 cd ~/
-git clone git@github.com:pybind/pybind11.git
+git clone https://github.com/pybind/pybind11.git
 cd pybind11
 cmake .
 make install
