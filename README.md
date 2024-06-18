@@ -88,7 +88,7 @@ cd ~/
 git clone https://github.com/pybind/pybind11.git
 cd pybind11
 cmake .
-make install
+sudo make install
 ```
 
 - To Build Python module, you have to wrap the c++ to python API.
