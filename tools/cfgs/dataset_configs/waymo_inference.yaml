@@ -17,7 +17,8 @@ SAMPLED_INTERVAL: {
 POINT_FEATURE_ENCODING: {
     encoding_type: absolute_coordinates_encoding,
     used_feature_list: ['x', 'y', 'z', 'intensity'],
-    src_feature_list: ['x', 'y', 'z', 'intensity', 'elongation', 'nlz'],
+    #src_feature_list: ['x', 'y', 'z', 'intensity', 'elongation', 'nlz'],
+    src_feature_list: ['x', 'y', 'z', 'intensity', 'elongation'],
 }
 
 # DATA_PROCESSOR:

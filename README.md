@@ -50,13 +50,22 @@ docker exec -it centerpoint bash
 pip install --upgrade pip
 sudo apt install python3-testresources
 pip install waymo-open-dataset-tf-2-12-0==1.6.4
-cd data/waymo/ 
-ln -s /Dataset/Datasets/openpcdet_waymo_v_1_3_1_trainval/raw_data/ .
+
+cd data/
+ln -s /Dataset/Datasets/waymo_perception_v_1_3_1/no_elongation/ waymo
+
+cd waymo
+ln -s /Dataset/Datasets/openpcdet_waymo_v_1_3_1_trainval/raw_data/ raw_data
+
 cd ~/OpenPCDet/
 ```
 
 - Extract point cloud data from tfrecord and generate data infos by running the following command (it takes several hours, and you could refer to `data/waymo/waymo_processed_data_v0_5_0` to see how many records that have been processed):
 ``` shell
+# only for single-frame setting: without 'elongation' in the 'used_feature_list'
+python -m pcdet.datasets.waymo.waymo_dataset --func create_waymo_infos \
+    --cfg_file tools/cfgs/dataset_configs/waymo_dataset_use_feature_no_elongation.yaml
+    
 # only for single-frame setting
 python -m pcdet.datasets.waymo.waymo_dataset --func create_waymo_infos \
     --cfg_file tools/cfgs/dataset_configs/waymo_dataset.yaml
