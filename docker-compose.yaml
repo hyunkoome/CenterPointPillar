@@ -1,6 +1,6 @@
 services:
   openpcdet:
-    image: openpcdet-dev-${USER}
+    image: openpcdet-dev
     env_file:
       - .env
     build:
@@ -10,22 +10,18 @@ services:
         BASE_IMAGE: openpcdet-env
         HOST_UID: $HOST_UID
         HOST_GID: $HOST_GID
-        HOST_USER: ${USER}        
+        HOST_USER: $HOST_USER
     container_name: centerpoint
     user: $HOST_UID:$HOST_GID
-    ports:    
-      - "8000:8000"
-      - "49100:22"
-      - "6006:6006"
-      - "8001:8001"
     volumes:
-      - .:/home/${USER}/OpenPCDet
+      - .:/home/$HOST_USER/OpenPCDet
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - $HOME/.ssh:/home/${USER}/.ssh
-      - $HOME/.config:/home/${USER}/.config
-      - $HOME/.gitconfig:/home/${USER}/.gitconfig
-      - ~/DATA/NAS/nfsRoot:/Dataset
-    working_dir: /home/${USER}/OpenPCDet
+      - $HOME/.ssh:/home/$HOST_USER/.ssh
+      - $HOME/.config:/home/$HOST_USER/.config
+      - $HOME/.gitconfig:/home/$HOST_USER/.gitconfig
+      # - ~/DATA/NAS/nfsRoot:/Dataset
+      - $HOME/Dataset:/Dataset
+    working_dir: /home/$HOST_USER/OpenPCDet
     environment:
       - DISPLAY=$DISPLAY
       - QT_X11_NO_MITSHM=1

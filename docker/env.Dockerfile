@@ -13,8 +13,7 @@ RUN apt-get update && apt-get install -y \
     libqt5core5a libqt5xml5 libqt5gui5 libqt5widgets5 libqt5concurrent5 libqt5opengl5 libcap2 libusb-1.0-0 libatk-adaptor neovim \
     python3-pip python3-tornado python3-dev python3-numpy python3-virtualenv libpcl-dev libgoogle-glog-dev libgflags-dev libatlas-base-dev \
     libsuitesparse-dev python3-pcl pcl-tools libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev libtbb2 libtbb-dev libjpeg-dev \
-    libpng-dev libtiff-dev libdc1394-22-dev xfce4-terminal bash-completion sudo &&\
-    rm -rf /var/lib/apt/lists/*
+    libpng-dev libtiff-dev libdc1394-22-dev xfce4-terminal bash-completion sudo
 
 # OpenCV
 WORKDIR /opencv
@@ -44,13 +43,13 @@ RUN pip install opencv-python==4.2.0.34
 RUN pip install onnx==1.16.0
 RUN pip install onnxsim==0.4.36
 RUN pip install onnx_graphsurgeon --extra-index-url https://pypi.ngc.nvidia.com
+RUN pip install waymo-open-dataset-tf-2-12-0
 
 ENV NVIDIA_VISIBLE_DEVICES="all" \
     NVIDIA_DRIVER_CAPABILITIES="all"
 
 # ROS2 Foxy installation
-RUN sudo apt update && \
-    sudo apt install software-properties-common libyaml-cpp-dev -y && \
+RUN sudo apt install software-properties-common libyaml-cpp-dev -y && \
     sudo add-apt-repository universe && \
     sudo apt update && sudo apt install curl -y && \
     sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg && \
@@ -59,3 +58,9 @@ RUN sudo apt update && \
     sudo apt install ros-foxy-desktop python3-argcomplete -y && \
     sudo apt install ros-dev-tools ros-foxy-rqt* ros-foxy-tf-transformations -y
 RUN sudo pip install transforms3d
+
+# Pybind 11
+WORKDIR /
+RUN git clone https://github.com/pybind/pybind11.git
+WORKDIR /pybind11/build
+RUN cmake ../ && make -j8 && make install
