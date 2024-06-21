@@ -61,4 +61,4 @@ target_link_libraries(cp PRIVATE
   ${YAML_CPP_LIBRARIES}
   stdc++fs
 )
-copy_output(cp tools)
+copy_output(cp ../../tools)
