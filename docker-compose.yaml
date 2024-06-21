@@ -13,6 +13,11 @@ services:
         HOST_USER: ${USER}        
     container_name: centerpoint
     user: $HOST_UID:$HOST_GID
+    ports:    
+      - "8000:8000"
+      - "49100:22"
+      - "6006:6006"
+      - "8001:8001"
     volumes:
       - .:/home/${USER}/OpenPCDet
       - /tmp/.X11-unix:/tmp/.X11-unix

@@ -212,9 +212,12 @@ def main():
     )
 
     if args.TensorRT:
-        model_path = "/home/jr/OpenPCDet/centerpoint/model/model.trt"
-        config_path = "/home/jr/OpenPCDet/centerpoint/config/config.yaml"
+        model_path = "{}/OpenPCDet/centerpoint/model/model.trt".format(os.path.expanduser('~'))
+        config_path = "{}/OpenPCDet/centerpoint/config/config.yaml".format(os.path.expanduser('~'))
         model = cp.CenterPoint(config_path, model_path)
+        print("**********************************************************************")
+        print("************************** load tensorRT *****************************")
+        print("**********************************************************************")
     else:
         model = build_network(model_cfg=cfg.MODEL, num_class=len(cfg.CLASS_NAMES), dataset=test_set)
 

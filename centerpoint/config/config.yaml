@@ -17,7 +17,8 @@ voxelization:
     x: 0.32
     y: 0.32
     z: 6.0
-  max_voxels: 25000
+  #max_voxels: 25000
+  max_voxels: 150000
   max_points_per_voxel: 32
   num_feature: 4
   num_voxel_feature: 10
