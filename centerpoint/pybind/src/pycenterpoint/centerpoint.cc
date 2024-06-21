@@ -19,7 +19,7 @@ CenterPoint::~CenterPoint()
 
 void CenterPoint::memoryInit(const std::string& model_path)
 {
-  size_t max_points = config_["centerpoint"]["max_points"].as<size_t>();
+  max_points = config_["centerpoint"]["max_points"].as<size_t>();
   size_t max_points_feature = max_points * config_["voxelization"]["num_feature"].as<size_t>();
   points_.reserve(max_points_feature);
   size_t bytes_points_capacity = max_points_feature * sizeof(float);
@@ -39,6 +39,10 @@ void CenterPoint::memoryInit(const std::string& model_path)
 std::vector<Box> CenterPoint::forward(PyArray<float> np_array)
 {
   size_t num_points = np_array.request().shape[0];
+  if (num_points > max_points) {
+    std::cout << "Max Points Over: " << num_points << std::endl;
+    num_points = max_points;
+  }
   size_t bytes_points = num_points * voxelization_->param().num_feature * sizeof(float);
 
   input_points_ = static_cast<float*>(np_array.request().ptr);

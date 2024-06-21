@@ -27,7 +27,7 @@ CenterPoint::~CenterPoint()
 
 void CenterPoint::memoryInit()
 {
-  size_t max_points = config_["centerpoint"]["max_points"].as<size_t>();
+  max_points = config_["centerpoint"]["max_points"].as<size_t>();
   size_t max_points_feature = max_points * config_["voxelization"]["num_feature"].as<size_t>();
   points_.reserve(max_points_feature);
   size_t bytes_points_capacity = max_points_feature * sizeof(float);
@@ -127,6 +127,10 @@ void CenterPoint::pubishBoxes()
 
 void CenterPoint::forward(size_t num_points)
 {
+  if (num_points > max_points) {
+    std::cout << "Max Points Over: " << num_points << std::endl;
+    num_points = max_points;
+  }
   size_t bytes_points = num_points * voxelization_->param().num_feature * sizeof(float);
   checkRuntime(cudaMemcpyAsync(dev_input_points_, input_points_, bytes_points, cudaMemcpyHostToDevice, stream_));
 

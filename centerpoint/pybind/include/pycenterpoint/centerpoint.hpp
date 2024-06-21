@@ -45,6 +45,7 @@ private:
 
   // Point Cloud Input
   std::vector<float> points_;
+  size_t max_points;
   float* input_points_ = nullptr;
   float* dev_input_points_ = nullptr;
 
