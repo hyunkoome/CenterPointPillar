@@ -33,7 +33,7 @@ ENV OpenCV_DIR=/usr/share/OpenCV
 
 # PyTorch for CUDA 12.1
 RUN pip install torch==2.1.1 torchvision==0.16.1 torchaudio==2.1.1 --index-url https://download.pytorch.org/whl/cu121
-ENV TORCH_CUDA_ARCH_LIST="5.0;6.0;6.1;7.0;7.5;8.0;8.6+PTX"
+ENV TORCH_CUDA_ARCH_LIST="5.0;6.0;6.1;7.0;7.5;8.0;8.6;8.9+PTX"
 
 # OpenPCDet Dependencies
 RUN apt remove python3-blinker -y

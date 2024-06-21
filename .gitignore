@@ -19,3 +19,4 @@ version.py
 *.trt
 Release/
 .vscode/
+pcdet.egg-info/

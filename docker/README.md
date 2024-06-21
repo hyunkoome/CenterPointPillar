@@ -21,7 +21,7 @@ Fill in the `.env` file with the GID, UID, and username like below.
 ``` shell
 HOST_UID=1000
 HOST_GID=1000
-HOST_USER=jr
+HOST_USER=$(whoami) # current user name
 ```
 ## Container Start
 Start the container.
@@ -29,3 +29,7 @@ Start the container.
 docker compose up --build -d
 ```
 
+Execute the container
+```
+docker exec -it centerpoint bash
+```

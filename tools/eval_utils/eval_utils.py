@@ -135,6 +135,7 @@ def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=Fal
     logger.info('****************Evaluation done.*****************')
     return ret_dict
 
+
 def box_to_dict(boxes):
     pred_boxes = []
     pred_scores = []
@@ -153,8 +154,9 @@ def box_to_dict(boxes):
     pred_labels = torch.tensor(pred_labels).cuda()
     
     return [{'pred_boxes': pred_boxes,
-            'pred_scores': pred_scores,
-            'pred_labels': pred_labels}]
+             'pred_scores': pred_scores,
+             'pred_labels': pred_labels}]
+
 
 def eval_one_epoch_with_tensorrt(cfg, args, model, dataloader, epoch_id, logger, dist_test=False, result_dir=None):
     result_dir.mkdir(parents=True, exist_ok=True)
@@ -182,9 +184,10 @@ def eval_one_epoch_with_tensorrt(cfg, args, model, dataloader, epoch_id, logger,
 
     if cfg.LOCAL_RANK == 0:
         progress_bar = tqdm.tqdm(total=len(dataloader), leave=True, desc='eval', dynamic_ncols=True)
+
     start_time = time.time()
     for i, batch_dict in enumerate(dataloader):
-        points = batch_dict['points'][:,1:5]
+        points = batch_dict['points'][:, 1:5]
 
         if getattr(args, 'infer_time', False):
             start_time = time.time()
