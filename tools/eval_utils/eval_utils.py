@@ -16,8 +16,7 @@ def statistics_info(cfg, ret_dict, metric, disp_dict):
     metric['gt_num'] += ret_dict.get('gt', 0)
     min_thresh = cfg.MODEL.POST_PROCESSING.RECALL_THRESH_LIST[0]
     disp_dict['recall_%s' % str(min_thresh)] = \
-        '(%d, %d) / %d' % (
-            metric['recall_roi_%s' % str(min_thresh)], metric['recall_rcnn_%s' % str(min_thresh)], metric['gt_num'])
+        '(%d, %d) / %d' % (metric['recall_roi_%s' % str(min_thresh)], metric['recall_rcnn_%s' % str(min_thresh)], metric['gt_num'])
 
 
 def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=False, result_dir=None):
@@ -47,9 +46,9 @@ def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=Fal
         num_gpus = torch.cuda.device_count()
         local_rank = cfg.LOCAL_RANK % num_gpus
         model = torch.nn.parallel.DistributedDataParallel(
-            model,
-            device_ids=[local_rank],
-            broadcast_buffers=False
+                model,
+                device_ids=[local_rank],
+                broadcast_buffers=False
         )
     model.eval()
 
@@ -153,7 +152,7 @@ def box_to_dict(boxes):
     pred_boxes = torch.tensor(pred_boxes).cuda()
     pred_scores = torch.tensor(pred_scores).cuda()
     pred_labels = torch.tensor(pred_labels).cuda()
-
+    
     return [{'pred_boxes': pred_boxes,
              'pred_scores': pred_scores,
              'pred_labels': pred_labels}]
@@ -188,21 +187,6 @@ def eval_one_epoch_with_tensorrt(cfg, args, model, dataloader, epoch_id, logger,
 
     start_time = time.time()
     for i, batch_dict in enumerate(dataloader):
-        # torch.cuda.synchronize()                      # added .. for slow play
-        if any([ss in batch_dict['frame_id'][0] for ss in
-                ['segment-10203656353524179475_7625_000_7645_000_with_camera_labels',
-                 'segment-11037651371539287009_77_670_97_670_with_camera_labels',
-                 'segment-11387395026864348975_3820_000_3840_000_with_camera_labels',
-                 'segment-11406166561185637285_1753_750_1773_750_with_camera_labels',
-                 'segment-11434627589960744626_4829_660_4849_660_with_camera_labels',
-                 'segment-12358364923781697038_2232_990_2252_990_with_camera_labels',
-                 'segment-12374656037744638388_1412_711_1432_711_with_camera_labels',
-                 'segment-1464917900451858484_1960_000_1980_000_with_camera_labels',
-                 'segment-14931160836268555821_5778_870_5798_870_with_camera_labels',
-                 ]]):
-            continue
-
-        print(batch_dict['frame_id'])
         points = batch_dict['points'][:, 1:5]
 
         if getattr(args, 'infer_time', False):
@@ -225,7 +209,6 @@ def eval_one_epoch_with_tensorrt(cfg, args, model, dataloader, epoch_id, logger,
             output_path=final_output_dir if args.save_to_file else None
         )
         det_annos += annos
-
         if cfg.LOCAL_RANK == 0:
             progress_bar.set_postfix(disp_dict)
             progress_bar.update()
