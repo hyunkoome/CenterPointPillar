@@ -73,7 +73,7 @@ void Voxelization::forward(const float *_points, int num_points, void *stream)
               dev_mask_, dev_voxels_, _stream));
 
   checkRuntime(generateBaseFeatures_launch(dev_mask_, dev_voxels_,
-              param_.grid_size.y, param_.grid_size.x,
+              param_.grid_size.y, param_.grid_size.x, param_.max_voxels,
               dev_params_input_,
               dev_voxel_features_,
               dev_voxel_num_,

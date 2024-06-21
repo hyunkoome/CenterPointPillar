@@ -21,13 +21,13 @@ cudaError_t generateVoxels_random_launch(const float *points, size_t points_size
                                          unsigned int *mask, float *voxels,
                                          cudaStream_t stream);
 __global__ void generateBaseFeatures_kernel(unsigned int *mask, float *voxels,
-                                            int grid_y_size, int grid_x_size,
+                                            int grid_y_size, int grid_x_size, unsigned int max_voxels,
                                             unsigned int *pillar_num,
                                             float *voxel_features,
                                             unsigned int *voxel_num,
                                             unsigned int *voxel_idxs);
 cudaError_t generateBaseFeatures_launch(unsigned int *mask, float *voxels,
-                                        int grid_y_size, int grid_x_size,
+                                        int grid_y_size, int grid_x_size, unsigned int max_voxels,
                                         unsigned int *pillar_num,
                                         float *voxel_features,
                                         unsigned int *voxel_num,
@@ -35,7 +35,7 @@ cudaError_t generateBaseFeatures_launch(unsigned int *mask, float *voxels,
                                         cudaStream_t stream);
 __global__ void generateFeatures_kernel(float* voxel_features,
                                         unsigned int* voxel_num, unsigned int* voxel_idxs, unsigned int *params,
-                                        float voxel_x, float voxel_y, float voxel_z,
+                                        float voxel_x, float voxel_y, float voxel_z, unsigned int max_voxels,
                                         float range_min_x, float range_min_y, float range_min_z,
                                         float* features);
 cudaError_t generateFeatures_launch(float* voxel_features,
