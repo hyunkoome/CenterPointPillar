@@ -91,27 +91,11 @@ cd ~/OpenPCDet
 sudo python setup.py develop
 ```
 
-- Install pybind11
-``` shell
-cd ~/
-git clone https://github.com/pybind/pybind11.git
-cd pybind11
-cmake .
-sudo make install
-```
-
 - To Build Python module, you have to wrap the c++ to python API.
 ``` shell
 cd ~/OpenPCDet/centerpoint/pybind
 cmake -BRelease
 cmake --build Release
-
-```
-
-- Copy Python module
-``` shell
-cd ~/OpenPCDet/
-cp centerpoint/pybind/tools/cp.cpython-38-x86_64-linux-gnu.so tools/
 ```
 
 ## 2) Train PCDET
