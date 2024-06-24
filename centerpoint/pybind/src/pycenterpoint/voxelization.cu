@@ -80,7 +80,7 @@ __global__ void generateBaseFeatures_kernel(unsigned int *mask, float *voxels,
 
   unsigned int current_pillarId = 0;
   current_pillarId = atomicAdd(pillar_num, 1);
-  if (current_pillarId > max_voxels) {
+  if (current_pillarId >= max_voxels) {
     printf("Max Voxels Over: %u\n", current_pillarId);
     return;
   }
@@ -136,7 +136,7 @@ __global__ void generateFeatures_kernel(float* voxel_features,
     int pillar_idx_inBlock = threadIdx.x/WARP_SIZE;
     unsigned int num_pillars = params[0];
 
-    if (pillar_idx >= num_pillars || pillar_idx > max_voxels) return;
+    if (pillar_idx >= num_pillars || pillar_idx >= max_voxels) return;
 
     __shared__ float4 pillarSM[WARPS_PER_BLOCK][WARP_SIZE];
     __shared__ float4 pillarSumSM[WARPS_PER_BLOCK];
