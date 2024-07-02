@@ -63,6 +63,10 @@ int PostProcess::forward(const float* reg, const float* height, const float* dim
                 stream);
 
   boxes_pre_nms_.resize(*host_detections_num_);
+  if (*host_detections_num_ == 0) {
+    std::cerr << "[ERR] No boxs detected." << std::endl;
+    return 0;
+  }
   if (*host_detections_num_ > nms_pre_max_size_) {
     std::cerr << "[ERR] Boxs num exceeds:" << *host_detections_num_ << std::endl;
   }
