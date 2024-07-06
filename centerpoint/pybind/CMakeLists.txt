@@ -26,6 +26,7 @@ find_package(pybind11 REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(TensorRT REQUIRED)
 find_package(YAML-CPP REQUIRED)
+find_package(PythonLibs REQUIRED)
 
 function(copy_output target_name to_path)
 add_custom_command(TARGET ${target_name} POST_BUILD
@@ -41,6 +42,7 @@ include_directories(
   ${CUDA_INCLUDE_DIRS}
   ${TensorRT_INCLUDE_DIRS}
   ${YAML_CPP_INCLUDE_DIRS}
+  ${PYTHON_INCLUDE_DIRS}
 )
 
 pybind11_add_module(cp MODULE
@@ -62,3 +64,24 @@ target_link_libraries(cp PRIVATE
   stdc++fs
 )
 copy_output(cp ../../tools)
+
+add_executable(npy_forward
+  npy_forward.cc
+  src/pycenterpoint/centerpoint.cc
+  src/pycenterpoint/network.cc
+  src/pycenterpoint/voxelization.cu
+  src/pycenterpoint/voxelization.cc
+  src/pycenterpoint/postprocess.cu
+  src/pycenterpoint/postprocess.cc
+  src/pillarscatter/pillarscatter-kernel.cu
+  src/pillarscatter/pillarscatter.cc
+)
+
+target_link_libraries(npy_forward
+  ${PCL_LIBRARIES}
+  ${CUDA_LIBRARIES}
+  ${TensorRT_LIBRARIES}
+  ${YAML_CPP_LIBRARIES}
+  ${PYTHON_LIBRARIES}
+  stdc++fs
+)

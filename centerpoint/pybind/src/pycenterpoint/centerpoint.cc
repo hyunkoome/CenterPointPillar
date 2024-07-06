@@ -58,3 +58,38 @@ std::vector<Box> CenterPoint::forward(PyArray<float> np_array)
   checkRuntime(cudaStreamSynchronize(stream_));
   return postprocess_->getBoxes();
 }
+
+std::vector<Box> CenterPoint::npy_forward(const std::string& npy_path)
+{
+  npy::npy_data<float> npy_data = npy::read_npy<float>(npy_path);
+  std::vector<float> raw_points = npy_data.data;
+  int num_points = raw_points.size() / 6;
+
+  std::vector<float> points;
+  points.reserve(num_points * 4);
+  for (size_t i = 0; i < raw_points.size(); i += 6) {
+    points.push_back(raw_points[i]);
+    points.push_back(raw_points[i + 1]);
+    points.push_back(raw_points[i + 2]);
+    points.push_back(raw_points[i + 3]);
+  }
+
+  if (num_points > max_points) {
+    std::cout << "Max Points Over: " << num_points << std::endl;
+    num_points = max_points;
+  }
+
+  size_t bytes_points = num_points * voxelization_->param().num_feature * sizeof(float);
+  input_points_ = points.data();
+  checkRuntime(cudaMemcpyAsync(dev_input_points_, input_points_, bytes_points, cudaMemcpyHostToDevice, stream_));
+
+  voxelization_->forward(dev_input_points_, num_points, stream_);
+
+  network_->forward(voxelization_->features(), voxelization_->coords(), voxelization_->nums(), stream_);
+
+  int box_num = postprocess_->forward(network_->center(), network_->center_z(), network_->dim(), network_->rot(),
+                                      network_->score(), network_->label(), network_->iou(), stream_);
+
+  checkRuntime(cudaStreamSynchronize(stream_));
+  return postprocess_->getBoxes();
+}

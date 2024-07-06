@@ -15,6 +15,7 @@
 #include "pycenterpoint/voxelization.hpp"
 #include "pycenterpoint/network.hpp"
 #include "pycenterpoint/postprocess.hpp"
+#include "pycenterpoint/npy.hpp"
 
 namespace py = pybind11;
 template <typename T>
@@ -26,6 +27,7 @@ public:
   CenterPoint(const std::string& config_path, const std::string& model_path);
   ~CenterPoint();
   std::vector<Box> forward(PyArray<float> np_array);
+  std::vector<Box> npy_forward(const std::string& npy_path);
 
 private:
   void memoryInit(const std::string& model_path);
