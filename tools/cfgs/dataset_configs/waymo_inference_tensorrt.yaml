@@ -1,0 +1,49 @@
+DATASET: 'WaymoDataset'
+DATA_PATH: '../data/waymo'
+PROCESSED_DATA_TAG: 'waymo_processed_data_v0_5_0'
+
+POINT_CLOUD_RANGE: [ -75.2, -75.2, -2, 75.2, 75.2, 4 ]
+
+DATA_SPLIT: {
+  'train': train,
+  #    'test': val
+  'test': val_tensorrt
+}
+
+
+SAMPLED_INTERVAL: {
+  'train': 5,
+  'test': 1
+}
+
+POINT_FEATURE_ENCODING: {
+  encoding_type: absolute_coordinates_encoding,
+  used_feature_list: [ 'x', 'y', 'z', 'intensity' ],
+  #src_feature_list: ['x', 'y', 'z', 'intensity', 'elongation', 'nlz'],
+  src_feature_list: [ 'x', 'y', 'z', 'intensity', 'elongation' ],
+}
+
+REMOVED_VAL_DATASET: [
+  'segment-17135518413411879545_1480_000_1500_000_with_camera_labels.tfrecord',
+  'segment-17962792089966876718_2210_933_2230_933_with_camera_labels.tfrecord',
+  'segment-18305329035161925340_4466_730_4486_730_with_camera_labels.tfrecord',
+  'segment-7163140554846378423_2717_820_2737_820_with_camera_labels.tfrecord',
+  ]
+
+# DATA_PROCESSOR:
+#     - NAME: mask_points_and_boxes_outside_range
+#       REMOVE_OUTSIDE_BOXES: True
+
+#     - NAME: shuffle_points
+#       SHUFFLE_ENABLED: {
+#         'train': True,
+#         'test': True
+#       }
+
+#     - NAME: transform_points_to_voxels
+#       VOXEL_SIZE: [0.1, 0.1, 0.15]
+#       MAX_POINTS_PER_VOXEL: 5
+#       MAX_NUMBER_OF_VOXELS: {
+#         'train': 150000,
+#         'test': 150000
+#       }
