@@ -19,7 +19,9 @@
 
 ### 1.2 Install Docker Engine on Ubuntu
 - Please refer to the [`docker.docs`](https://docs.docker.com/engine/install/ubuntu/) for more details.
-- Please refer to the [`install guide for nvidia container toolkit`](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) and [`nvidia container toolkit`](https://github.com/NVIDIA/nvidia-container-toolkit?tab=readme-ov-file) for more details.
+- If you would like to know more details, please refer to:
+  - [`install guide for nvidia container toolkit`](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) 
+  - [`nvidia container toolkit`](https://github.com/NVIDIA/nvidia-container-toolkit?tab=readme-ov-file) 
 
 - docker 설치 후 /var/run/docker.sock의 permission denied 발생하는 경우
 ``` shell
