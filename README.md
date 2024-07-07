@@ -50,14 +50,6 @@ docker exec -it centerpoint bash
 pip install --upgrade pip
 sudo apt install python3-testresources
 pip install waymo-open-dataset-tf-2-12-0==1.6.4
-
-cd data/
-ln -s /Dataset/Datasets/waymo_perception_v_1_3_1/no_elongation/ waymo
-
-cd waymo
-ln -s /Dataset/Datasets/openpcdet_waymo_v_1_3_1_trainval/raw_data/ raw_data
-
-cd ~/OpenPCDet/
 ```
 
 - Extract point cloud data from tfrecord and generate data infos by running the following command (it takes several hours, and you could refer to `data/waymo/waymo_processed_data_v0_5_0` to see how many records that have been processed):
@@ -222,7 +214,7 @@ rviz2
 
 ## 5) Evaluation
 
-- Install pybind11 (if you already installed in the training step, skip please)
+- Install pybind11 (if you already installed in the `1.6 PCDET Installation`, skip please)
 ``` shell
 cd ~/
 git clone git@github.com:pybind/pybind11.git
@@ -239,13 +231,42 @@ cmake -BRelease
 cmake --build Release
 ```
 
-- Copy Python module (if you already installed in the training step, skip please)
+### 5.1 Evaluation with pytorch model
 ``` shell
-cp centerpoint/pybind/tools/cp.cpython-38-x86_64-linux-gnu.so tools/
-
+docker exec -it centerpoint bash
+cd ~/OpenPCDet/tools/
+python test.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt ../ckpt/checkpoint_epoch_24.pth
 ```
 
-### 5.1 Evaluation
+- Results as shown:
+```
+OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/AP: 0.6203 
+OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/APH: 0.6136 
+OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/APL: 0.6203 
+OBJECT_TYPE_TYPE_VEHICLE_LEVEL_2/AP: 0.5416 
+OBJECT_TYPE_TYPE_VEHICLE_LEVEL_2/APH: 0.5357 
+OBJECT_TYPE_TYPE_VEHICLE_LEVEL_2/APL: 0.5416 
+OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_1/AP: 0.5325 
+OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_1/APH: 0.2886 
+OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_1/APL: 0.5325 
+OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_2/AP: 0.4550 
+OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_2/APH: 0.2467 
+OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_2/APL: 0.4550 
+OBJECT_TYPE_TYPE_SIGN_LEVEL_1/AP: 0.0000 
+OBJECT_TYPE_TYPE_SIGN_LEVEL_1/APH: 0.0000 
+OBJECT_TYPE_TYPE_SIGN_LEVEL_1/APL: 0.0000 
+OBJECT_TYPE_TYPE_SIGN_LEVEL_2/AP: 0.0000 
+OBJECT_TYPE_TYPE_SIGN_LEVEL_2/APH: 0.0000 
+OBJECT_TYPE_TYPE_SIGN_LEVEL_2/APL: 0.0000 
+OBJECT_TYPE_TYPE_CYCLIST_LEVEL_1/AP: 0.3282 
+OBJECT_TYPE_TYPE_CYCLIST_LEVEL_1/APH: 0.2738 
+OBJECT_TYPE_TYPE_CYCLIST_LEVEL_1/APL: 0.3282 
+OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/AP: 0.3156 
+OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/APH: 0.2633 
+OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/APL: 0.3156 
+```
+
+### 5.2 Evaluation with TensorRT model
 ``` shell
 docker exec -it centerpoint bash
 cd ~/OpenPCDet/tools/
