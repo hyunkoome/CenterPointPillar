@@ -11,7 +11,7 @@ services:
         HOST_UID: $HOST_UID
         HOST_GID: $HOST_GID
         HOST_USER: $HOST_USER
-    container_name: centerpoint
+    container_name: centerpoint-pillar
     user: $HOST_UID:$HOST_GID
     volumes:
       - .:/home/$HOST_USER/OpenPCDet
