@@ -11,7 +11,7 @@ services:
         HOST_UID: $HOST_UID
         HOST_GID: $HOST_GID
         HOST_USER: $HOST_USER
-    container_name: centerpoint
+    container_name: centerpoint-pillar
     user: $HOST_UID:$HOST_GID
     volumes:
       - .:/home/$HOST_USER/OpenPCDet
@@ -19,7 +19,6 @@ services:
       - $HOME/.ssh:/home/$HOST_USER/.ssh
       - $HOME/.config:/home/$HOST_USER/.config
       - $HOME/.gitconfig:/home/$HOST_USER/.gitconfig
-      # - ~/DATA/NAS/nfsRoot:/Dataset
       - $HOME/Dataset:/Dataset
     working_dir: /home/$HOST_USER/OpenPCDet
     environment:

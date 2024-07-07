@@ -59,8 +59,3 @@ RUN sudo apt install software-properties-common libyaml-cpp-dev -y && \
     sudo apt install ros-dev-tools ros-foxy-rqt* ros-foxy-tf-transformations -y
 RUN sudo pip install transforms3d
 
-# Pybind 11
-WORKDIR /
-RUN git clone https://github.com/pybind/pybind11.git
-WORKDIR /pybind11/build
-RUN cmake ../ && make -j8 && make install
