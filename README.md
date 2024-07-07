@@ -34,7 +34,7 @@ sudo chmod 666 /var/run/docker.sock
 
 - Build the docker base image
 ```shell script
-docker build -f docker/env.Dockerfile -t openpcdet-env docker/
+docker build -f docker/env.Dockerfile -t openpcdet-centerpoint-env docker/
 ```
 
 - Start the container.
@@ -48,7 +48,7 @@ docker compose up --build -d
 
 - For Waymo datasets, Install the official `waymo-open-dataset` by running the following command:
 ``` shell
-docker exec -it centerpoint bash
+docker exec -it centerpointpillar bash
 pip install --upgrade pip
 sudo apt install python3-testresources
 pip install waymo-open-dataset-tf-2-12-0==1.6.4
@@ -76,12 +76,12 @@ python -m pcdet.datasets.waymo.waymo_dataset --func create_waymo_infos \
 
 - Execute the container
 ```
-docker exec -it centerpoint bash
+docker exec -it centerpointpillar bash
 ```
 
-- Install OpenPCDet
+- Install OpenPCDet based CenterPointPillar
 ``` shell
-cd ~/OpenPCDet
+cd ~/CenterPointPillar
 sudo python setup.py develop
 ```
 
@@ -93,7 +93,7 @@ cd pybind11
 cmake .
 sudo make install
 
-cd ~/OpenPCDet/centerpoint/pybind
+cd ~/CenterPointPillar/centerpoint/pybind
 cmake -BRelease
 cmake --build Release
 ```
@@ -104,7 +104,7 @@ cmake --build Release
 - If you use pytorch 1.x, you have to use `python -m torch.distributed.launch` i.e., `tools/scripts/dist_X.sh`
 - If you use pytorch 2.x, you have to use `torchrun` i.e., `tools/scripts/torch_train_X.sh`
 ``` shell
-cd ~/OpenPCDet
+cd ~/CenterPointPillar
 ln -s /Dataset/Train_Results/CenterPoint/ output  # you can replace `/Dataset/Train_Results/CenterPoint/` with directory you want
 cd tools/
 sh scripts/torch_train.sh 2 --cfg_file ./cfgs/waymo_models/centerpoint_pillar_train.yaml --batch_size 24
@@ -112,7 +112,7 @@ sh scripts/torch_train.sh 2 --cfg_file ./cfgs/waymo_models/centerpoint_pillar_tr
 
 ### 2.2 Train using Single-GPU
 ``` shell
-cd ~/OpenPCDet
+cd ~/CenterPointPillar
 ln -s /Dataset/Train_Results/CenterPoint/ output
 cd tools/
 CUDA_VISIBLE_DEVICES=1 python train.py --cfg_file ./cfgs/waymo_models/centerpoint_pillar_train.yaml --batch_size 16  # you can replace `CUDA_VISIBLE_DEVICES=1` with gpu's number you want
@@ -123,21 +123,21 @@ CUDA_VISIBLE_DEVICES=1 python train.py --cfg_file ./cfgs/waymo_models/centerpoin
 
 ### 3.1 ROS2 play bagfile on the container
 ```
-docker exec -it centerpoint bash
+docker exec -it centerpointpillar bash
 cd /Dataset
 ros2 bag play segment-10359308928573410754_720_000_740_000_with_camera_labels/  # ros2 bag play folder_with_ros2bag
 ```
 
 ### 3.2 execute ros2_demo.py on the container
 ``` shell
-docker exec -it centerpoint bash
-cd ~/OpenPCDet/tools/
+docker exec -it centerpointpillar bash
+cd ~/CenterPointPillar/tools/
 python ros2_demo.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt ../ckpt/checkpoint_epoch_24.pth
 ```
 
 ### 3.3 execute rviz2
 ``` shell
-docker exec -it centerpoint bash
+docker exec -it centerpointpillar bash
 rviz2
 ```
 
@@ -158,8 +158,8 @@ rviz2
 
 ### 4.1 Convert Onnx file from Pytorch 'pth' model file
 ``` shell
-docker exec -it centerpoint bash
-cd ~/OpenPCDet/tools
+docker exec -it centerpointpillar bash
+cd ~/CenterPointPillar/tools
 python export_onnx.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt ../ckpt/checkpoint_epoch_24.pth
 
 ```
@@ -174,7 +174,7 @@ As a result, create 3 onnx files on the `CenterPoint/onnx`
 
 ### 4.2 Copy Onnx file to the `model` folder in ROS2  
 ``` shell
-cd ~/OpenPCDet/
+cd ~/CenterPointPillar/
 cp onnx/model.onnx centerpoint/model/
 
 ```
@@ -183,7 +183,7 @@ cp onnx/model.onnx centerpoint/model/
 - Build the ROS2 package in your ROS2 workspace.
 ``` shell
 cd ~/ && mkdir -p ros2_ws/src && cd ros2_ws/ && colcon build --symlink-install
-cd src && ln -s OPENPCDET_PATH/centerpoint .
+cd src && ln -s CenterPointPillar/centerpoint .
 cd src/centerpoint && mkdir model
 cd ~/ros2_ws && colcon build --symlink-install
 source ~/ros2_ws/install/setup.bash
@@ -198,14 +198,14 @@ ros2 launch centerpoint centerpoint.launch.py
 
 ### 4.5 ROS2 play bagfile on the container
 ```
-docker exec -it centerpoint bash
+docker exec -it centerpointpillar bash
 cd /Dataset
 ros2 bag play segment-10359308928573410754_720_000_740_000_with_camera_labels/  # ros2 bag play folder_with_ros2bag
 ```
 
 ### 4.6 Run rviz2
 ``` shell
-docker exec -it centerpoint bash
+docker exec -it centerpointpillar bash
 rviz2
 ```
 - Fixed Frame: base_link
@@ -235,8 +235,8 @@ cmake --build Release
 
 ### 5.1 Evaluation with pytorch model
 ``` shell
-docker exec -it centerpoint bash
-cd ~/OpenPCDet/tools/
+docker exec -it centerpointpillar bash
+cd ~/CenterPointPillar/tools/
 python test.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt ../ckpt/checkpoint_epoch_24.pth
 ```
 
@@ -270,8 +270,8 @@ OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/APL: 0.3156
 
 ### 5.2 Evaluation with TensorRT model
 ``` shell
-docker exec -it centerpoint bash
-cd ~/OpenPCDet/tools/
+docker exec -it centerpointpillar bash
+cd ~/CenterPointPillar/tools/
 python test.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --TensorRT
 ```
 
