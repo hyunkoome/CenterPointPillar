@@ -1,10 +1,15 @@
 
 # PointPillar based CenterPoint
 
-## OpenPCDet
+## Basis Codes: OpenPCDet and CenterPoint
 <img src="docs/open_mmlab.png" align="right" width="30%">
+
 - `OpenPCDet` is a clear, simple, self-contained open source project for LiDAR-based 3D object detection. 
-- This repository is dedicated solely to inferencing the CenterPoint-pointpillar model.
+  - [OpenPCDet](https://github.com/open-mmlab/OpenPCDet.git) repository is dedicated solely to inferencing the [CenterPoint-pointpillar](https://arxiv.org/abs/2006.11275) model, Center-based 3D Object Detection and Tracking.     
+  - I also improved the [OpenPCDet](https://github.com/open-mmlab/OpenPCDet.git) with [Mr. JongRok-Lee](https://github.com/JongRok-Lee) in the following repository:
+    - https://github.com/JongRok-Lee/CenterPoint.git
+    - https://github.com/hyunkoome/CenterPoint.git 
+    
 
 ## Docker Environment
 - Base Image: [`nvcr.io/nvidia/tensorrt:23.04-py3`](https://docs.nvidia.com/deeplearning/tensorrt/container-release-notes/index.html#rel_23-04)
@@ -34,47 +39,19 @@
 - Please follow [docs/6_Convert_Models.md](docs/6_Convert_Models.md) and proceed with the instructions.
 
 ## 7. Testing a model and Evaluation with TensorRT models.
-- Please follow [docs/7_Testing_Evaluation_with_TensoRT.md](docs/7_Testing_Evaluation_with_TensoRT.md) and proceed with the instructions.
+- Please follow [docs/7_Testing_Evaluation_with_TensorRT.md](docs/7_Testing_Evaluation_with_TensorRT.md) and proceed with the instructions.
 
+## 8. Inference a model with TensorRT on ROS2 (Python)
+- Please follow [docs/8_Inference_ROS2_TensorRT_Python.md](docs/8_Inference_ROS2_TensorRT_Python.md) and proceed with the instructions.
+
+<!-- show picture sources/fig1.png-->
+<img src="./sources/fig1.png" align="center" width="100%">
 ------------------------------------------------------------------------------------------
 
 
 
 
-## 3) Usage: Inference Method using ROS2 *Python* Node on the Container ENV
 
-### 3.1 ROS2 play bagfile on the container
-```
-docker exec -it centerpointpillar bash
-cd /Dataset
-ros2 bag play segment-10359308928573410754_720_000_740_000_with_camera_labels/  # ros2 bag play folder_with_ros2bag
-```
-
-### 3.2 execute ros2_demo.py on the container
-``` shell
-docker exec -it centerpointpillar bash
-cd ~/CenterPointPillar/tools/
-python ros2_demo.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt ../ckpt/checkpoint_epoch_24.pth
-```
-
-### 3.3 execute rviz2
-``` shell
-docker exec -it centerpointpillar bash
-rviz2
-```
-
-### 3.4 setting rviz2
-- Fixed Frame: base_link
-- Add -> By display type -> PountCloud2 -> Topic: /lidar/top/pointcloud, Size(m): 0.03
-- Add -> By topic -> /boxes/MarkerArray
-
-<img src="sources/rviz2_add_topic.png" align="center" width="359">
-
-### 3.5 run rviz2
-
-<!-- show picture sources/fig1.png-->
-<img src="sources/rviz2.png" align="center" width="100%">
-<img src="sources/fig1.png" align="center" width="100%">
 
 ## 4) Usage: Inference Method using ROS2 *C++* Node on the Container ENV (Comming soon....)
 
