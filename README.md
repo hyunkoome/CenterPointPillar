@@ -44,6 +44,9 @@
 ## 8. Inference a model with TensorRT on ROS2 (Python)
 - Please follow [docs/8_Inference_ROS2_TensorRT_Python.md](docs/8_Inference_ROS2_TensorRT_Python.md) and proceed with the instructions.
 
+## 9. Inference a model with TensorRT on ROS2 (C++)
+- Please follow [docs/9_Inference_ROS2_TensorRT_Cpp.md](docs/9_Inference_ROS2_TensorRT_Cpp.md) and proceed with the instructions.
+
 <!-- show picture sources/fig1.png-->
 <img src="./docs/sources/fig1.png" align="center" width="100%">
 ------------------------------------------------------------------------------------------
