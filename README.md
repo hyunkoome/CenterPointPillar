@@ -14,39 +14,13 @@
 - python: 3.8
 - Pytorch: 2.1.1
 
-## 1. Set Dev Environment using Docker Env 
-- Please follow [docs/1_Set_Environment_using_Docker.md](docs/1_Set_Environment_using_Docker.md) and proceed with the instructions.
+## 1. Setting Dev Environment using Docker Env 
+- Please follow [docs/1_Setting_Environment_using_Docker.md](docs/1_Setting_Environment_using_Docker.md) and proceed with the instructions.
 
-## 2 Prepare Datasets 
-- Please follow [docs/2_Prepare_Waymo_Dataset.md](docs/2_Prepare_Waymo_Dataset.md) and proceed with the instructions.
+## 2 Preparing Datasets 
+- Please follow [docs/2_Preparing_Waymo_Dataset.md](docs/2_Preparing_Waymo_Dataset.md) and proceed with the instructions.
 
-### 1.5 Prepare Datasets 
-
-- For Waymo datasets, Install the official `waymo-open-dataset` by running the following command:
-``` shell
-docker exec -it centerpointpillar bash
-pip install --upgrade pip
-sudo apt install python3-testresources
-pip install waymo-open-dataset-tf-2-12-0==1.6.4
-```
-
-- Extract point cloud data from tfrecord and generate data infos by running the following command (it takes several hours, and you could refer to `data/waymo/waymo_processed_data_v0_5_0` to see how many records that have been processed):
-``` shell
-# only for single-frame setting: without 'elongation' in the 'used_feature_list'
-python -m pcdet.datasets.waymo.waymo_dataset --func create_waymo_infos \
-    --cfg_file tools/cfgs/dataset_configs/waymo_dataset_use_feature_no_elongation.yaml
-    
-# only for single-frame setting
-python -m pcdet.datasets.waymo.waymo_dataset --func create_waymo_infos \
-    --cfg_file tools/cfgs/dataset_configs/waymo_dataset.yaml
-
-# for single-frame or multi-frame setting
-python -m pcdet.datasets.waymo.waymo_dataset --func create_waymo_infos \
-    --cfg_file tools/cfgs/dataset_configs/waymo_dataset_multiframe.yaml
-# Ignore 'CUDA_ERROR_NO_DEVICE' error as this process does not require GPU.
-```
-
-- Please refer to the [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for more details.
+------------------------------------------------------------------------------------------
 
 ### 1.6 PCDET Installation
 
