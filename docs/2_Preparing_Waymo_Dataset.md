@@ -6,6 +6,7 @@
 - If you want to use a custom dataset, Please refer to our [custom dataset template](CUSTOM_DATASET_TUTORIAL.md).
 
 ### Waymo Open Dataset
+🔥 **You just do it on the `Host Env` not in the `Container Env`.**
 - Please download the official [Waymo Open Dataset](https://waymo.com/open/download/),
 - If you download `waymo_open_dataset_v_1_4_3/archived_files` files, including the training data `training_0000.tar~training_0031.tar` and the validation data `validation_0000.tar~validation_0007.tar`.
   - Unzip all the above `xxxx.tar` files to the directory of `data/waymo/raw_data` as follows (You could get 798 *train* tfrecord and 202 *val* tfrecord ):
@@ -45,8 +46,7 @@ gsutil -m cp -r \
   .
 ```
 
-- if you want only to do training and validation, just download `training` set and `validation` one.
-- <span style='backgound-color: #fff5b1'>You just do it on the `Host Env` not in the `Container Env`, and merge to `raw_data` directory as follows:</span> 
+- if you want only to do training and validation, just download `training` set and `validation` one, and merge to `raw_data` directory as follows: 
 ```shell
 mkdir -p waymo_open_dataset_v_1_4_3/raw_data
 cd waymo_open_dataset_v_1_4_3
