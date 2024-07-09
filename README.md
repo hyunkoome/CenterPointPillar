@@ -20,53 +20,19 @@
 ## 2 Preparing Datasets 
 - Please follow [docs/2_Preparing_Waymo_Dataset.md](docs/2_Preparing_Waymo_Dataset.md) and proceed with the instructions.
 
+## 3. Setting OpenPCDet.
+- Please follow [docs/3_Setting_OpenPCDet.md](docs/3_Setting_OpenPCDet.md) and proceed with the instructions.
+
+## 4. Training a model.
+- Please follow [docs/4_Training.md](docs/4_Training.md) and proceed with the instructions.
+
+## 5. Testing a model and Evaluation.
+- Please follow [docs/5_Testing_Evaluation.md](docs/5_Testing_Evaluation.md) and proceed with the instructions.
+
+
 ------------------------------------------------------------------------------------------
 
-### 1.6 PCDET Installation
 
-- Execute the container
-```
-docker exec -it centerpointpillar bash
-```
-
-- Install OpenPCDet based CenterPointPillar
-``` shell
-cd ~/CenterPointPillar
-sudo python setup.py develop
-```
-
-- To Build Python module, you have to install and wrap the c++ to python API.
-``` shell
-cd ~/
-git clone https://github.com/pybind/pybind11.git
-cd pybind11
-cmake .
-sudo make install
-
-cd ~/CenterPointPillar/centerpoint/pybind
-cmake -BRelease
-cmake --build Release
-```
-
-## 2) Train PCDET
-
-### 2.1 Train using Multi-GPUs 
-- If you use pytorch 1.x, you have to use `python -m torch.distributed.launch` i.e., `tools/scripts/dist_X.sh`
-- If you use pytorch 2.x, you have to use `torchrun` i.e., `tools/scripts/torch_train_X.sh`
-``` shell
-cd ~/CenterPointPillar
-ln -s /Dataset/Train_Results/CenterPoint/ output  # you can replace `/Dataset/Train_Results/CenterPoint/` with directory you want
-cd tools/
-sh scripts/torch_train.sh 2 --cfg_file ./cfgs/waymo_models/centerpoint_pillar_train.yaml --batch_size 24
-```
-
-### 2.2 Train using Single-GPU
-``` shell
-cd ~/CenterPointPillar
-ln -s /Dataset/Train_Results/CenterPoint/ output
-cd tools/
-CUDA_VISIBLE_DEVICES=1 python train.py --cfg_file ./cfgs/waymo_models/centerpoint_pillar_train.yaml --batch_size 16  # you can replace `CUDA_VISIBLE_DEVICES=1` with gpu's number you want
-```
 
 
 ## 3) Usage: Inference Method using ROS2 *Python* Node on the Container ENV

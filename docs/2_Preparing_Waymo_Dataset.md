@@ -87,59 +87,7 @@ Note that you do not need to install `waymo-open-dataset` if you have already pr
 ## [Return to the main page.](../README.md)
 
 
-## Pretrained Models
-If you would like to train [CaDDN](../tools/cfgs/kitti_models/CaDDN.yaml), download the pretrained [DeepLabV3 model](https://download.pytorch.org/models/deeplabv3_resnet101_coco-586e9e4e.pth) and place within the `checkpoints` directory. Please make sure the [kornia](https://github.com/kornia/kornia) is installed since it is needed for `CaDDN`.
-```
-CenterPointPillar
-├── checkpoints
-│   ├── deeplabv3_resnet101_coco-586e9e4e.pth
-├── data
-├── pcdet
-├── tools
-```
-
-## Training & Testing
 
 
-### Test and evaluate the pretrained models
-* Test with a pretrained model:
-```shell script
-python test.py --cfg_file ${CONFIG_FILE} --batch_size ${BATCH_SIZE} --ckpt ${CKPT}
-```
-
-* To test all the saved checkpoints of a specific training setting and draw the performance curve on the Tensorboard, add the `--eval_all` argument:
-```shell script
-python test.py --cfg_file ${CONFIG_FILE} --batch_size ${BATCH_SIZE} --eval_all
-```
-
-* To test with multiple GPUs:
-```shell script
-sh scripts/dist_test.sh ${NUM_GPUS} \
-    --cfg_file ${CONFIG_FILE} --batch_size ${BATCH_SIZE}
-
-# or
-
-sh scripts/slurm_test_mgpu.sh ${PARTITION} ${NUM_GPUS} \
-    --cfg_file ${CONFIG_FILE} --batch_size ${BATCH_SIZE}
-```
-
-
-### Train a model
-You could optionally add extra command line parameters `--batch_size ${BATCH_SIZE}` and `--epochs ${EPOCHS}` to specify your preferred parameters.
-
-
-* Train with multiple GPUs or multiple machines
-```shell script
-sh scripts/dist_train.sh ${NUM_GPUS} --cfg_file ${CONFIG_FILE}
-
-# or
-
-sh scripts/slurm_train.sh ${PARTITION} ${JOB_NAME} ${NUM_GPUS} --cfg_file ${CONFIG_FILE}
-```
-
-* Train with a single GPU:
-```shell script
-python train.py --cfg_file ${CONFIG_FILE}
-```
 
 
