@@ -1,26 +1,26 @@
 services:
   openpcdet:
-    image: openpcdet-dev
+    image: openpcdet-centerpoint-dev
     env_file:
       - .env
     build:
       context: ./docker
       dockerfile: Dockerfile
       args:
-        BASE_IMAGE: openpcdet-env
+        BASE_IMAGE: openpcdet-centerpoint-env
         HOST_UID: $HOST_UID
         HOST_GID: $HOST_GID
         HOST_USER: $HOST_USER
-    container_name: centerpoint-pillar
+    container_name: centerpointpillar
     user: $HOST_UID:$HOST_GID
     volumes:
-      - .:/home/$HOST_USER/OpenPCDet
+      - .:/home/$HOST_USER/CenterPointPillar
       - /tmp/.X11-unix:/tmp/.X11-unix
       - $HOME/.ssh:/home/$HOST_USER/.ssh
       - $HOME/.config:/home/$HOST_USER/.config
       - $HOME/.gitconfig:/home/$HOST_USER/.gitconfig
       - $HOME/Dataset:/Dataset
-    working_dir: /home/$HOST_USER/OpenPCDet
+    working_dir: /home/$HOST_USER/CenterPointPillar
     environment:
       - DISPLAY=$DISPLAY
       - QT_X11_NO_MITSHM=1

@@ -1,13 +1,24 @@
-numpy
-llvmlite
-numba
+# conda create -n centerpointpillar python==3.8.10
+# pip install torch==2.1.1 torchvision==0.16.1 torchaudio==2.1.1 --index-url https://download.pytorch.org/whl/cu121
+numpy==1.23.0
+llvmlite==0.41.1
+numba==0.58.1
 torch>=1.1
-tensorboardX
-easydict
-pyyaml
-scikit-image
-tqdm
-torchvision
-SharedArray
-opencv-python
-pyquaternion
+tensorboardX==2.6.2.2
+#easyd
+pyyaml==6.0.1
+scikit-image==0.20.0
+tqdm==4.66.4
+#torchvision
+SharedArray==3.2.3
+open3d==0.16.0
+mayavi==4.8.2
+av2==0.2.1
+kornia==0.6.8
+pyquaternion==0.9.9
+colored==1.4.4
+opencv-python==4.2.0.34
+onnx==1.16.0
+onnxsim==0.4.36
+waymo-open-dataset-tf-2-12-0==1.6.4
+# pip install onnx_graphsurgeon --extra-index-url https://pypi.ngc.nvidia.com

@@ -1,3 +1,4 @@
+import _init_path
 import rclpy
 import rclpy.duration
 from rclpy.node import Node

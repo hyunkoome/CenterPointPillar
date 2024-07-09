@@ -212,8 +212,8 @@ def main():
     )
 
     if args.TensorRT:
-        model_path = "{}/OpenPCDet/centerpoint/model/model.trt".format(os.path.expanduser('~'))
-        config_path = "{}/OpenPCDet/centerpoint/config/config.yaml".format(os.path.expanduser('~'))
+        model_path = "{}/CenterPointPillar/centerpoint/model/model.trt".format(os.path.expanduser('~'))
+        config_path = "{}/CenterPointPillar/centerpoint/config/config.yaml".format(os.path.expanduser('~'))
         model = cp.CenterPoint(config_path, model_path)
         print("**********************************************************************")
         print("************************** load tensorRT *****************************")
