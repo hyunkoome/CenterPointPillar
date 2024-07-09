@@ -1,11 +1,12 @@
+
+# PointPillar based CenterPoint
+
+## OpenPCDet
 <img src="docs/open_mmlab.png" align="right" width="30%">
-
-# OpenPCDet
-
 - `OpenPCDet` is a clear, simple, self-contained open source project for LiDAR-based 3D object detection. 
 - This repository is dedicated solely to inferencing the CenterPoint-pointpillar model.
 
-# Docker Environment
+## Docker Environment
 - Base Image: [`nvcr.io/nvidia/tensorrt:23.04-py3`](https://docs.nvidia.com/deeplearning/tensorrt/container-release-notes/index.html#rel_23-04)
 - OS: Ubuntu 20.24
 - CUDA: 12.1.0
@@ -34,8 +35,6 @@
 
 ## 7. Testing a model and Evaluation with TensorRT models.
 - Please follow [docs/7_Testing_Evaluation_with_TensoRT.md](docs/7_Testing_Evaluation_with_TensoRT.md) and proceed with the instructions.
-
-
 
 ------------------------------------------------------------------------------------------
 
@@ -79,28 +78,6 @@ rviz2
 
 ## 4) Usage: Inference Method using ROS2 *C++* Node on the Container ENV (Comming soon....)
 
-### 4.1 Convert Onnx file from Pytorch 'pth' model file
-``` shell
-docker exec -it centerpointpillar bash
-cd ~/CenterPointPillar/tools
-python export_onnx.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt ../ckpt/checkpoint_epoch_24.pth
-
-```
-<img src="sources/cmd_onnx.png" align="center" width="100%">
-
-As a result, create 3 onnx files on the `CenterPoint/onnx`
-- model_raw.onnx: pth를 onnx 로 변환한 순수 버전
-- model_sim.onnx: onnx 그래프 간단화해주는 라이브러리 사용한 버전
-- model.onnx: sim 모델을 gragh surgeon으로 수정한 최종 버전, tensorRT plugin 사용하려면 gragh surgeon이 필수임.
-
-<img src="sources/three_onnx_models.png" align="center" width="572">
-
-### 4.2 Copy Onnx file to the `model` folder in ROS2  
-``` shell
-cd ~/CenterPointPillar/
-cp onnx/model.onnx centerpoint/model/
-
-```
 
 ### 4.3 ROS2 C++ Node
 - Build the ROS2 package in your ROS2 workspace.
@@ -136,8 +113,6 @@ rviz2
 - Add -> By topic -> /boxes/MarkerArray
 
 <img src="sources/rviz2_ros_cpp.png" align="center" width="100%">
-
-## 5) Evaluation
 
 
 

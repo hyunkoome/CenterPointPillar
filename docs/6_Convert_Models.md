@@ -20,7 +20,7 @@ python export_onnx.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.
   - model_sim.onnx: onnx 그래프 간단화해주는 라이브러리 사용한 버전
   - model.onnx: sim 모델을 gragh surgeon으로 수정한 최종 버전, tensorRT plugin 사용하려면 gragh surgeon이 필수임.
 
-<img src="../sources/three_onnx_models.png" align="center" width="572">
+<img src="../sources/three_onnx_models.png" align="center" width="100%">
 
 - Copy Onnx file to the `centerpoint/model` folder for `TensorRT` Process  
 ``` shell
