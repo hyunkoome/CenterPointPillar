@@ -45,51 +45,10 @@
 - Please follow [docs/8_Inference_ROS2_TensorRT_Python.md](docs/8_Inference_ROS2_TensorRT_Python.md) and proceed with the instructions.
 
 <!-- show picture sources/fig1.png-->
-<img src="./sources/fig1.png" align="center" width="100%">
+<img src="./docs/sources/fig1.png" align="center" width="100%">
 ------------------------------------------------------------------------------------------
 
 
-
-
-
-
-## 4) Usage: Inference Method using ROS2 *C++* Node on the Container ENV (Comming soon....)
-
-
-### 4.3 ROS2 C++ Node
-- Build the ROS2 package in your ROS2 workspace.
-``` shell
-cd ~/ && mkdir -p ros2_ws/src && cd ros2_ws/ && colcon build --symlink-install
-cd src && ln -s CenterPointPillar/centerpoint .
-cd src/centerpoint && mkdir model
-cd ~/ros2_ws && colcon build --symlink-install
-source ~/ros2_ws/install/setup.bash
-```
-
-### 4.4 Run the ROS2 Node.
-``` shell
-ros2 launch centerpoint centerpoint.launch.py
-```
-
-- Once running ros2 centerpoint node, create tensorRT file to the same folder having onnx file, automatically.
-
-### 4.5 ROS2 play bagfile on the container
-```
-docker exec -it centerpointpillar bash
-cd /Dataset
-ros2 bag play segment-10359308928573410754_720_000_740_000_with_camera_labels/  # ros2 bag play folder_with_ros2bag
-```
-
-### 4.6 Run rviz2
-``` shell
-docker exec -it centerpointpillar bash
-rviz2
-```
-- Fixed Frame: base_link
-- Add -> By display type -> PountCloud2 -> Topic: /lidar/top/pointcloud, Size(m): 0.03
-- Add -> By topic -> /boxes/MarkerArray
-
-<img src="sources/rviz2_ros_cpp.png" align="center" width="100%">
 
 
 
