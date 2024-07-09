@@ -27,3 +27,5 @@ python export_onnx.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.
 cd ~/CenterPointPillar/
 cp onnx/model.onnx centerpoint/model/
 ```
+
+## [Return to the main page.](../README.md)
