@@ -51,6 +51,14 @@
 <img src="./docs/sources/fig1.png" align="center" width="100%">
 ------------------------------------------------------------------------------------------
 
+## TODO
+
+- [x] Fixed codes.
+- [x] Updated README.md files.
+- [ ] Create proper config.yaml when running `export_onnx.py` with cfg_file `cfgs/waymo_models/centerpoint_pillar_inference.yaml`.
+- [ ] Removed all codes not related to centerpoint-pillar.
+- [ ] Re-arranged parameters and restructured on the yaml files of datasets and models.
+- [ ] Will be refactoring.
 
 
 
