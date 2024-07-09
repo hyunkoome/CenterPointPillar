@@ -45,7 +45,8 @@ gsutil -m cp -r \
   .
 ```
 
-- if you want only to do training and validation, just download `training` set and `validation` one, and merge to `raw_data` directory as follows:
+- if you want only to do training and validation, just download `training` set and `validation` one.
+- <span style='backgound-color: #fff5b1'>You just do it on the `Host Env` not in the `Container Env`, and merge to `raw_data` directory as follows:</span> 
 ```shell
 mkdir -p waymo_open_dataset_v_1_4_3/raw_data
 cd waymo_open_dataset_v_1_4_3
