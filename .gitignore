@@ -20,3 +20,10 @@ version.py
 Release/
 .vscode/
 pcdet.egg-info/
+ament_**
+CMakeFiles/
+Makefile
+CTest*
+CMakeCache.txt
+cmake_install.cmake
+centerpoint_node

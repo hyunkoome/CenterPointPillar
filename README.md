@@ -132,57 +132,105 @@ rviz2
 
 ## 5) Evaluation
 
-- Install pybind11 (if you already installed in the `1.6 PCDET Installation`, skip please)
-``` shell
-cd ~/
-git clone git@github.com:pybind/pybind11.git
-cd pybind11
-cmake .
-make install
-```
+[//]: # ()
+[//]: # (- Install pybind11 &#40;if you already installed in the `1.6 PCDET Installation`, skip please&#41;)
 
-- To evaluate TensorRT results, you have to wrap the c++ to python API. (if you already installed in the training step, skip please)
-- Build Python module 
-``` shell
-cd centerpoint/pybind
-cmake -BRelease
-cmake --build Release
-```
+[//]: # (``` shell)
 
-### 5.1 Evaluation with pytorch model
-``` shell
-docker exec -it centerpointpillar bash
-cd ~/CenterPointPillar/tools/
-python test.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt ../ckpt/checkpoint_epoch_24.pth
-```
+[//]: # (cd ~/)
 
-- Results as shown:
-```
-OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/AP: 0.6203 
-OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/APH: 0.6136 
-OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/APL: 0.6203 
-OBJECT_TYPE_TYPE_VEHICLE_LEVEL_2/AP: 0.5416 
-OBJECT_TYPE_TYPE_VEHICLE_LEVEL_2/APH: 0.5357 
-OBJECT_TYPE_TYPE_VEHICLE_LEVEL_2/APL: 0.5416 
-OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_1/AP: 0.5325 
-OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_1/APH: 0.2886 
-OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_1/APL: 0.5325 
-OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_2/AP: 0.4550 
-OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_2/APH: 0.2467 
-OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_2/APL: 0.4550 
-OBJECT_TYPE_TYPE_SIGN_LEVEL_1/AP: 0.0000 
-OBJECT_TYPE_TYPE_SIGN_LEVEL_1/APH: 0.0000 
-OBJECT_TYPE_TYPE_SIGN_LEVEL_1/APL: 0.0000 
-OBJECT_TYPE_TYPE_SIGN_LEVEL_2/AP: 0.0000 
-OBJECT_TYPE_TYPE_SIGN_LEVEL_2/APH: 0.0000 
-OBJECT_TYPE_TYPE_SIGN_LEVEL_2/APL: 0.0000 
-OBJECT_TYPE_TYPE_CYCLIST_LEVEL_1/AP: 0.3282 
-OBJECT_TYPE_TYPE_CYCLIST_LEVEL_1/APH: 0.2738 
-OBJECT_TYPE_TYPE_CYCLIST_LEVEL_1/APL: 0.3282 
-OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/AP: 0.3156 
-OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/APH: 0.2633 
-OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/APL: 0.3156 
-```
+[//]: # (git clone git@github.com:pybind/pybind11.git)
+
+[//]: # (cd pybind11)
+
+[//]: # (cmake .)
+
+[//]: # (make install)
+
+[//]: # (```)
+
+[//]: # ()
+[//]: # (- To evaluate TensorRT results, you have to wrap the c++ to python API. &#40;if you already installed in the training step, skip please&#41;)
+
+[//]: # (- Build Python module )
+
+[//]: # (``` shell)
+
+[//]: # (cd centerpoint/pybind)
+
+[//]: # (cmake -BRelease)
+
+[//]: # (cmake --build Release)
+
+[//]: # (```)
+
+[//]: # ()
+[//]: # (### 5.1 Evaluation with pytorch model)
+
+[//]: # (``` shell)
+
+[//]: # (docker exec -it centerpointpillar bash)
+
+[//]: # (cd ~/CenterPointPillar/tools/)
+
+[//]: # (python test.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt ../ckpt/checkpoint_epoch_24.pth)
+
+[//]: # (```)
+
+[//]: # ()
+[//]: # (- Results as shown:)
+
+[//]: # (```)
+
+[//]: # (OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/AP: 0.6203 )
+
+[//]: # (OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/APH: 0.6136 )
+
+[//]: # (OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/APL: 0.6203 )
+
+[//]: # (OBJECT_TYPE_TYPE_VEHICLE_LEVEL_2/AP: 0.5416 )
+
+[//]: # (OBJECT_TYPE_TYPE_VEHICLE_LEVEL_2/APH: 0.5357 )
+
+[//]: # (OBJECT_TYPE_TYPE_VEHICLE_LEVEL_2/APL: 0.5416 )
+
+[//]: # (OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_1/AP: 0.5325 )
+
+[//]: # (OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_1/APH: 0.2886 )
+
+[//]: # (OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_1/APL: 0.5325 )
+
+[//]: # (OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_2/AP: 0.4550 )
+
+[//]: # (OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_2/APH: 0.2467 )
+
+[//]: # (OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_2/APL: 0.4550 )
+
+[//]: # (OBJECT_TYPE_TYPE_SIGN_LEVEL_1/AP: 0.0000 )
+
+[//]: # (OBJECT_TYPE_TYPE_SIGN_LEVEL_1/APH: 0.0000 )
+
+[//]: # (OBJECT_TYPE_TYPE_SIGN_LEVEL_1/APL: 0.0000 )
+
+[//]: # (OBJECT_TYPE_TYPE_SIGN_LEVEL_2/AP: 0.0000 )
+
+[//]: # (OBJECT_TYPE_TYPE_SIGN_LEVEL_2/APH: 0.0000 )
+
+[//]: # (OBJECT_TYPE_TYPE_SIGN_LEVEL_2/APL: 0.0000 )
+
+[//]: # (OBJECT_TYPE_TYPE_CYCLIST_LEVEL_1/AP: 0.3282 )
+
+[//]: # (OBJECT_TYPE_TYPE_CYCLIST_LEVEL_1/APH: 0.2738 )
+
+[//]: # (OBJECT_TYPE_TYPE_CYCLIST_LEVEL_1/APL: 0.3282 )
+
+[//]: # (OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/AP: 0.3156 )
+
+[//]: # (OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/APH: 0.2633 )
+
+[//]: # (OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/APL: 0.3156 )
+
+[//]: # (```)
 
 ### 5.2 Evaluation with TensorRT model
 ``` shell

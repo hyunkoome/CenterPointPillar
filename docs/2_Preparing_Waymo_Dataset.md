@@ -82,6 +82,19 @@ python -m pcdet.datasets.waymo.waymo_dataset --func create_waymo_infos \
     --cfg_file tools/cfgs/dataset_configs/waymo_dataset_multiframe.yaml
 # Ignore 'CUDA_ERROR_NO_DEVICE' error as this process does not require GPU.
 ```
+
+- If you already ran above commends and created waymo datasets, just link the files as below:
+```shell
+cd ~/CenterPointPillar/data/waymo
+ln -s /Dataset/HDD8TB/Datasets/Waymo/Perception_Dataset/openpcdet_waymo_v_1_3_1_trainval/raw_data raw_data
+ln -s /Dataset/HDD8TB/Datasets/Waymo/Perception_Dataset/waymo_data_org/waymo_processed_data_v0_5_0 waymo_processed_data_v0_5_0
+ln -s /Dataset/HDD8TB/Datasets/Waymo/Perception_Dataset/waymo_data_org/waymo_processed_data_v0_5_0_gt_database_train_sampled_1 waymo_processed_data_v0_5_0_gt_database_train_sampled_1
+
+ln -s /Dataset/HDD8TB/Datasets/Waymo/Perception_Dataset/waymo_data_org/waymo_processed_data_v0_5_0_gt_database_train_sampled_1_global.npy waymo_processed_data_v0_5_0_gt_database_train_sampled_1_global.npy
+ln -s /Dataset/HDD8TB/Datasets/Waymo/Perception_Dataset/waymo_data_org/waymo_processed_data_v0_5_0_infos_train.pkl waymo_processed_data_v0_5_0_infos_train.pkl
+ln -s /Dataset/HDD8TB/Datasets/Waymo/Perception_Dataset/waymo_data_org/waymo_processed_data_v0_5_0_infos_val.pkl waymo_processed_data_v0_5_0_infos_val.pkl
+ln -s /Dataset/HDD8TB/Datasets/Waymo/Perception_Dataset/waymo_data_org/waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_1.pkl waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_1.pkl
+```
 Note that you do not need to install `waymo-open-dataset` if you have already processed the data before and do not need to evaluate with official Waymo Metrics.
 
 ## [Return to the main page.](../README.md)

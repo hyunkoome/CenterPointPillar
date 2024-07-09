@@ -20,6 +20,9 @@ cd pybind11
 cmake .
 sudo make install
 
+pip install --upgrade pip
+sudo apt install python3-testresources
+
 cd ~/CenterPointPillar/centerpoint/pybind
 cmake -BRelease
 cmake --build Release
