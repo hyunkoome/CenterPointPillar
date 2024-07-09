@@ -26,8 +26,15 @@
 ## 4. Training a model.
 - Please follow [docs/4_Training.md](docs/4_Training.md) and proceed with the instructions.
 
-## 5. Testing a model and Evaluation.
+## 5. Testing a model and Evaluation with Pytorch models.
 - Please follow [docs/5_Testing_Evaluation.md](docs/5_Testing_Evaluation.md) and proceed with the instructions.
+
+## 6. Convert ONNX models from Pytorch models
+- Please follow [docs/6_Convert_Models.md](docs/6_Convert_Models.md) and proceed with the instructions.
+
+## 7. Testing a model and Evaluation with TensorRT models.
+- Please follow [docs/7_Testing_Evaluation_with_TensoRT.md](docs/7_Testing_Evaluation_with_TensoRT.md) and proceed with the instructions.
+
 
 
 ------------------------------------------------------------------------------------------
