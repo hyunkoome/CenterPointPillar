@@ -4,8 +4,9 @@ import torch
 import torch.nn as nn
 import numpy as np
 from ...ops.iou3d_nms import iou3d_nms_utils
-from ...utils.spconv_utils import find_all_spconv_keys
-from .. import backbones_2d, backbones_3d, dense_heads, roi_heads
+# from ...utils.spconv_utils import find_all_spconv_keys
+# from .. import backbones_2d, backbones_3d, dense_heads, roi_heads
+from .. import backbones_2d, backbones_3d, dense_heads
 from ..backbones_2d import map_to_bev
 from ..backbones_3d import pfe, vfe
 from ..model_utils import model_nms_utils
@@ -160,17 +161,17 @@ class Detector3DTemplate(nn.Module):
     def build_roi_head(self, model_info_dict):
         if self.model_cfg.get('ROI_HEAD', None) is None:
             return None, model_info_dict
-        point_head_module = roi_heads.__all__[self.model_cfg.ROI_HEAD.NAME](
-            model_cfg=self.model_cfg.ROI_HEAD,
-            input_channels=model_info_dict['num_point_features'],
-            backbone_channels= model_info_dict.get('backbone_channels', None),
-            point_cloud_range=model_info_dict['point_cloud_range'],
-            voxel_size=model_info_dict['voxel_size'],
-            num_class=self.num_class if not self.model_cfg.ROI_HEAD.CLASS_AGNOSTIC else 1,
-        )
-
-        model_info_dict['module_list'].append(point_head_module)
-        return point_head_module, model_info_dict
+        # point_head_module = roi_heads.__all__[self.model_cfg.ROI_HEAD.NAME](
+        #     model_cfg=self.model_cfg.ROI_HEAD,
+        #     input_channels=model_info_dict['num_point_features'],
+        #     backbone_channels= model_info_dict.get('backbone_channels', None),
+        #     point_cloud_range=model_info_dict['point_cloud_range'],
+        #     voxel_size=model_info_dict['voxel_size'],
+        #     num_class=self.num_class if not self.model_cfg.ROI_HEAD.CLASS_AGNOSTIC else 1,
+        # )
+        #
+        # model_info_dict['module_list'].append(point_head_module)
+        # return point_head_module, model_info_dict
 
     def forward(self, **kwargs):
         raise NotImplementedError
