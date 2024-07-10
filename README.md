@@ -55,10 +55,19 @@
 
 - [x] Fixed codes.
 - [x] Updated README.md files.
-- [ ] Create proper config.yaml when running `export_onnx.py` with cfg_file `cfgs/waymo_models/centerpoint_pillar_inference.yaml`.
-- [ ] Removed all codes not related to centerpoint-pillar.
-- [ ] Re-arranged parameters and restructured on the yaml files of datasets and models.
-- [ ] Will be refactoring.
+- [ ] Refactoring Phase1: Remove all codes not related to centerpoint-pillar.
+  - [ ] Remove codes not related to network models (centerpoint-pillar).
+  - [ ] Remove codes not related to waymo dataset.
+  - [ ] Remove codes not related to functions.
+  - [ ] Remove all parameters not related to centerpoint-pillar in the `config.yaml` files (networks and datasets).
+  - [ ] Remove duplicated parameters in the `config.yaml` files (networks and datasets).
+  - [ ] Merge duplicated codes of header, source (c++ and cuda) for pybind and ROS.
+- [ ] Refactoring Phase2: Restructure the codes and config files.
+  - [ ] Restructure all codes.
+  - [ ] Re-arranged parameters and restructured on the `config.yaml` files of datasets and models.
+  - [ ] Fix the code to create proper config.yaml when running `export_onnx.py` with cfg_file `cfgs/waymo_models/centerpoint_pillar_inference.yaml`.
+- [ ] Refactoring Phase3: Add unit test functions for python, c++, cuda.
+
 
 
 
