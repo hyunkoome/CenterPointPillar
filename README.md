@@ -5,7 +5,10 @@
 <img src="docs/open_mmlab.png" align="right" width="30%">
 
 - `OpenPCDet` is a clear, simple, self-contained open source project for LiDAR-based 3D object detection. 
-  - [OpenPCDet](https://github.com/open-mmlab/OpenPCDet.git) repository is dedicated solely to inferencing the [CenterPoint-pointpillar](https://arxiv.org/abs/2006.11275) model, Center-based 3D Object Detection and Tracking.     
+  - [OpenPCDet](https://github.com/open-mmlab/OpenPCDet.git) repository is dedicated solely to inferencing the [CenterPoint-pointpillar](https://ar5iv.labs.arxiv.org/html/2006.11275) model, Center-based 3D Object Detection and Tracking.
+    - Refer to [NVIDIA-AI-IOT/CUDA-PointPillars](https://github.com/NVIDIA-AI-IOT/CUDA-PointPillars.git)
+      - [Detecting Objects in Point Clouds with NVIDIA CUDA-Pointpillars](https://developer.nvidia.com/blog/detecting-objects-in-point-clouds-with-cuda-pointpillars/)
+      - [PointPillars: Fast Encoders for Object Detection from Point Clouds](https://ar5iv.labs.arxiv.org/html/1812.05784)
   - I also improved the [OpenPCDet](https://github.com/open-mmlab/OpenPCDet.git) with [Mr. JongRok-Lee](https://github.com/JongRok-Lee) in the following repository:
     - https://github.com/JongRok-Lee/CenterPoint.git
     - https://github.com/hyunkoome/CenterPoint.git 
