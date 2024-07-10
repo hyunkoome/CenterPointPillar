@@ -49,7 +49,6 @@ def parse_config():
     parser.add_argument('--ckpt_save_time_interval', type=int, default=300, help='in terms of seconds')
     parser.add_argument('--wo_gpu_stat', action='store_true', help='')
     parser.add_argument('--use_amp', action='store_true', help='use mix precision training')
-    
 
     args = parser.parse_args()
 

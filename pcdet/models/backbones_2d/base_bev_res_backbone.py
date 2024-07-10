@@ -2,8 +2,9 @@ import torch
 import torch.nn as nn
 import numpy as np
 
+from .base_bev_res_backbone_basic_block import BaseBEVResBackboneBasicBlock
 
-class BaseBEVBackbone(nn.Module):
+class BaseBEVResBackbone(nn.Module):
     def __init__(self, model_cfg, input_channels):
         super().__init__()
         self.model_cfg = model_cfg
@@ -29,24 +30,17 @@ class BaseBEVBackbone(nn.Module):
         self.deblocks = nn.ModuleList()
         for idx in range(num_levels):
             cur_layers = [
-                nn.ZeroPad2d(1),
-                nn.Conv2d(
-                    c_in_list[idx], num_filters[idx], kernel_size=3,
-                    stride=layer_strides[idx], padding=0, bias=False
-                ),
-                nn.BatchNorm2d(num_filters[idx], eps=1e-3, momentum=0.01),
-                nn.ReLU()
+                # nn.ZeroPad2d(1),
+                BaseBEVResBackboneBasicBlock(c_in_list[idx], num_filters[idx], layer_strides[idx], 1, True)
             ]
             for k in range(layer_nums[idx]):
                 cur_layers.extend([
-                    nn.Conv2d(num_filters[idx], num_filters[idx], kernel_size=3, padding=1, bias=False),
-                    nn.BatchNorm2d(num_filters[idx], eps=1e-3, momentum=0.01),
-                    nn.ReLU()
+                    BaseBEVResBackboneBasicBlock(num_filters[idx], num_filters[idx])
                 ])
             self.blocks.append(nn.Sequential(*cur_layers))
             if len(upsample_strides) > 0:
                 stride = upsample_strides[idx]
-                if stride > 1 or (stride == 1 and not self.model_cfg.get('USE_CONV_FOR_NO_STRIDE', False)):
+                if stride >= 1:
                     self.deblocks.append(nn.Sequential(
                         nn.ConvTranspose2d(
                             num_filters[idx], num_upsample_filters[idx],
@@ -68,7 +62,7 @@ class BaseBEVBackbone(nn.Module):
                         nn.ReLU()
                     ))
 
-        c_in = sum(num_upsample_filters)
+        c_in = sum(num_upsample_filters) if len(num_upsample_filters) > 0 else sum(num_filters)
         if len(upsample_strides) > num_levels:
             self.deblocks.append(nn.Sequential(
                 nn.ConvTranspose2d(c_in, c_in, upsample_strides[-1], stride=upsample_strides[-1], bias=False),
@@ -110,11 +104,3 @@ class BaseBEVBackbone(nn.Module):
         data_dict['spatial_features_2d'] = x
 
         return data_dict
-
-
-
-
-
-
-
-
