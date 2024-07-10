@@ -1,17 +1,17 @@
 import torch
-from torch import nn
+# from torch import nn
 
 
-class ConvFuser(nn.Module):
+class ConvFuser(torch.nn.Module):
     def __init__(self,model_cfg) -> None:
         super().__init__()
         self.model_cfg = model_cfg
         in_channel = self.model_cfg.IN_CHANNEL
         out_channel = self.model_cfg.OUT_CHANNEL
-        self.conv = nn.Sequential(
-            nn.Conv2d(in_channel, out_channel, 3, padding=1, bias=False),
-            nn.BatchNorm2d(out_channel),
-            nn.ReLU(True)
+        self.conv = torch.nn.Sequential(
+            torch.nn.Conv2d(in_channel, out_channel, 3, padding=1, bias=False),
+            torch.nn.BatchNorm2d(out_channel),
+            torch.nn.ReLU(True)
             )
         
     def forward(self,batch_dict):

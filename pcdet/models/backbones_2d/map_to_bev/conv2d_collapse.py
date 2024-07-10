@@ -1,10 +1,8 @@
 import torch
-import torch.nn as nn
-
 from pcdet.models.model_utils.basic_block_2d import BasicBlock2D
 
 
-class Conv2DCollapse(nn.Module):
+class Conv2DCollapse(torch.nn.Module):
 
     def __init__(self, model_cfg, grid_size):
         """

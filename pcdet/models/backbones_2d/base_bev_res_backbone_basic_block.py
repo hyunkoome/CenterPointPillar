@@ -1,10 +1,6 @@
-# import torch
-import torch.nn as nn
+import torch
 
-
-# import numpy as np
-
-class BaseBEVResBackboneBasicBlock(nn.Module):
+class BaseBEVResBackboneBasicBlock(torch.nn.Module):
     expansion: int = 1
 
     def __init__(
@@ -16,17 +12,17 @@ class BaseBEVResBackboneBasicBlock(nn.Module):
             downsample: bool = False,
     ) -> None:
         super().__init__()
-        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=3, stride=stride, padding=padding, bias=False)
-        self.bn1 = nn.BatchNorm2d(planes, eps=1e-3, momentum=0.01)
-        self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(planes, eps=1e-3, momentum=0.01)
-        self.relu2 = nn.ReLU()
+        self.conv1 = torch.nn.Conv2d(inplanes, planes, kernel_size=3, stride=stride, padding=padding, bias=False)
+        self.bn1 = torch.nn.BatchNorm2d(planes, eps=1e-3, momentum=0.01)
+        self.relu1 = torch.nn.ReLU()
+        self.conv2 = torch.nn.Conv2d(planes, planes, kernel_size=3, padding=1, bias=False)
+        self.bn2 = torch.nn.BatchNorm2d(planes, eps=1e-3, momentum=0.01)
+        self.relu2 = torch.nn.ReLU()
         self.downsample = downsample
         if self.downsample:
-            self.downsample_layer = nn.Sequential(
-                nn.Conv2d(inplanes, planes, kernel_size=1, stride=stride, padding=0, bias=False),
-                nn.BatchNorm2d(planes, eps=1e-3, momentum=0.01)
+            self.downsample_layer = torch.nn.Sequential(
+                torch.nn.Conv2d(inplanes, planes, kernel_size=1, stride=stride, padding=0, bias=False),
+                torch.nn.BatchNorm2d(planes, eps=1e-3, momentum=0.01)
             )
         self.stride = stride
 

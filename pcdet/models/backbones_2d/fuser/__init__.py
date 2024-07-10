@@ -1,4 +1,4 @@
-from .convfuser import ConvFuser
+# from .convfuser import ConvFuser
 __all__ = {
-    'ConvFuser':ConvFuser
+    # 'ConvFuser':ConvFuser
 }

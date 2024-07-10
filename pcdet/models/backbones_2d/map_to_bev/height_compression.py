@@ -1,7 +1,7 @@
-import torch.nn as nn
+import torch
 
 
-class HeightCompression(nn.Module):
+class HeightCompression(torch.nn.Module):
     def __init__(self, model_cfg, **kwargs):
         super().__init__()
         self.model_cfg = model_cfg
