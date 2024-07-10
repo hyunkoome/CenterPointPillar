@@ -14,7 +14,7 @@ DATA_CONFIG:
                 'test': True
             }
 
-        -   NAME: transform_points_to_voxels_placeholder #transform_points_to_voxels
+        -   NAME: transform_points_to_voxels
             VOXEL_SIZE: [ 0.32, 0.32, 6.0 ]
             MAX_POINTS_PER_VOXEL: 32
             MAX_NUMBER_OF_VOXELS: {
