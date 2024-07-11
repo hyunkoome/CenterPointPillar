@@ -11,8 +11,11 @@ import torch, numpy as np
 import array
 from pathlib import Path
 from demo import DemoDataset, parse_config
-from pcdet.models import build_network, load_data_to_gpu
-from pcdet.utils import common_utils
+# from pcdet.models import build_network, load_data_to_gpu
+from object_detection.detectors3d import build_network
+from general.utilities.data_utils import load_data_to_gpu
+# from pcdet.utils import common_utils
+from general.utilities import common_utils
 
 DUMMY_FIELD_PREFIX = '__'
 type_mappings = [(PointField.INT8, np.dtype('int8')),
