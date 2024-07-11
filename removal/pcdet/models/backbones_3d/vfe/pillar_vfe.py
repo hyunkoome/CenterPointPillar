@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from .vfe_template import VFETemplate
 
 
-class PFNLayer(nn.Module):
+class PFNLayer(torch.nn.Module):
     def __init__(self,
                  in_channels,
                  out_channels,

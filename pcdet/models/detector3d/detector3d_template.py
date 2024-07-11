@@ -2,14 +2,14 @@ import os
 
 import torch
 import torch.nn as nn
-import numpy as np
 from ...ops.iou3d_nms import iou3d_nms_utils
-# from ...utils.spconv_utils import find_all_spconv_keys
-# from .. import backbones_2d, backbones_3d, dense_heads, roi_heads
-from .. import backbones_2d, backbones_3d, dense_heads
-from ..backbones_2d import map_to_bev
-from ..backbones_3d import pfe, vfe
 from ..model_utils import model_nms_utils
+
+import pcdet.models.detector3d.centerpoint_pillar.voxel_feature_encoding_1st as vfe
+import pcdet.models.detector3d.centerpoint_pillar.to_bev_2nd as bev
+import pcdet.models.detector3d.centerpoint_pillar.backbones_3rd as backbones
+import pcdet.models.detector3d.centerpoint_pillar.heads_4th as head
+# from pcdet.models.detector3d import build_detector
 
 
 class Detector3DTemplate(nn.Module):
@@ -20,11 +20,7 @@ class Detector3DTemplate(nn.Module):
         self.dataset = dataset
         self.class_names = dataset.class_names
         self.register_buffer('global_step', torch.LongTensor(1).zero_())
-
-        self.module_topology = [
-            'vfe', 'backbone_3d', 'map_to_bev_module', 'pfe',
-            'backbone_2d', 'dense_head',  'point_head', 'roi_head'
-        ]
+        self.module_topology = ['vfe', 'bev', 'backbones', 'head']
 
     @property
     def mode(self):
@@ -66,40 +62,23 @@ class Detector3DTemplate(nn.Module):
         model_info_dict['module_list'].append(vfe_module)
         return vfe_module, model_info_dict
 
-    def build_backbone_3d(self, model_info_dict):
-        if self.model_cfg.get('BACKBONE_3D', None) is None:
-            return None, model_info_dict
-
-        backbone_3d_module = backbones_3d.__all__[self.model_cfg.BACKBONE_3D.NAME](
-            model_cfg=self.model_cfg.BACKBONE_3D,
-            input_channels=model_info_dict['num_point_features'],
-            grid_size=model_info_dict['grid_size'],
-            voxel_size=model_info_dict['voxel_size'],
-            point_cloud_range=model_info_dict['point_cloud_range']
-        )
-        model_info_dict['module_list'].append(backbone_3d_module)
-        model_info_dict['num_point_features'] = backbone_3d_module.num_point_features
-        model_info_dict['backbone_channels'] = backbone_3d_module.backbone_channels \
-            if hasattr(backbone_3d_module, 'backbone_channels') else None
-        return backbone_3d_module, model_info_dict
-
-    def build_map_to_bev_module(self, model_info_dict):
+    def build_bev(self, model_info_dict):
         if self.model_cfg.get('MAP_TO_BEV', None) is None:
             return None, model_info_dict
 
-        map_to_bev_module = map_to_bev.__all__[self.model_cfg.MAP_TO_BEV.NAME](
+        bev_module = bev.__all__[self.model_cfg.MAP_TO_BEV.NAME](
             model_cfg=self.model_cfg.MAP_TO_BEV,
             grid_size=model_info_dict['grid_size']
         )
-        model_info_dict['module_list'].append(map_to_bev_module)
-        model_info_dict['num_bev_features'] = map_to_bev_module.num_bev_features
-        return map_to_bev_module, model_info_dict
+        model_info_dict['module_list'].append(bev_module)
+        model_info_dict['num_bev_features'] = bev_module.num_bev_features
+        return bev_module, model_info_dict
 
-    def build_backbone_2d(self, model_info_dict):
+    def build_backbones(self, model_info_dict):
         if self.model_cfg.get('BACKBONE_2D', None) is None:
             return None, model_info_dict
 
-        backbone_2d_module = backbones_2d.__all__[self.model_cfg.BACKBONE_2D.NAME](
+        backbone_2d_module = backbones.__all__[self.model_cfg.BACKBONE_2D.NAME](
             model_cfg=self.model_cfg.BACKBONE_2D,
             input_channels=model_info_dict.get('num_bev_features', None)
         )
@@ -107,28 +86,13 @@ class Detector3DTemplate(nn.Module):
         model_info_dict['num_bev_features'] = backbone_2d_module.num_bev_features
         return backbone_2d_module, model_info_dict
 
-    def build_pfe(self, model_info_dict):
-        if self.model_cfg.get('PFE', None) is None:
-            return None, model_info_dict
-
-        pfe_module = pfe.__all__[self.model_cfg.PFE.NAME](
-            model_cfg=self.model_cfg.PFE,
-            voxel_size=model_info_dict['voxel_size'],
-            point_cloud_range=model_info_dict['point_cloud_range'],
-            num_bev_features=model_info_dict['num_bev_features'],
-            num_rawpoint_features=model_info_dict['num_rawpoint_features']
-        )
-        model_info_dict['module_list'].append(pfe_module)
-        model_info_dict['num_point_features'] = pfe_module.num_point_features
-        model_info_dict['num_point_features_before_fusion'] = pfe_module.num_point_features_before_fusion
-        return pfe_module, model_info_dict
-
-    def build_dense_head(self, model_info_dict):
+    def build_head(self, model_info_dict):
         if self.model_cfg.get('DENSE_HEAD', None) is None:
             return None, model_info_dict
-        dense_head_module = dense_heads.__all__[self.model_cfg.DENSE_HEAD.NAME](
+        dense_head_module = head.__all__[self.model_cfg.DENSE_HEAD.NAME](
             model_cfg=self.model_cfg.DENSE_HEAD,
-            input_channels=model_info_dict['num_bev_features'] if 'num_bev_features' in model_info_dict else self.model_cfg.DENSE_HEAD.INPUT_FEATURES,
+            input_channels=model_info_dict[
+                'num_bev_features'] if 'num_bev_features' in model_info_dict else self.model_cfg.DENSE_HEAD.INPUT_FEATURES,
             num_class=self.num_class if not self.model_cfg.DENSE_HEAD.CLASS_AGNOSTIC else 1,
             class_names=self.class_names,
             grid_size=model_info_dict['grid_size'],
@@ -138,40 +102,6 @@ class Detector3DTemplate(nn.Module):
         )
         model_info_dict['module_list'].append(dense_head_module)
         return dense_head_module, model_info_dict
-
-    def build_point_head(self, model_info_dict):
-        if self.model_cfg.get('POINT_HEAD', None) is None:
-            return None, model_info_dict
-
-        if self.model_cfg.POINT_HEAD.get('USE_POINT_FEATURES_BEFORE_FUSION', False):
-            num_point_features = model_info_dict['num_point_features_before_fusion']
-        else:
-            num_point_features = model_info_dict['num_point_features']
-
-        point_head_module = dense_heads.__all__[self.model_cfg.POINT_HEAD.NAME](
-            model_cfg=self.model_cfg.POINT_HEAD,
-            input_channels=num_point_features,
-            num_class=self.num_class if not self.model_cfg.POINT_HEAD.CLASS_AGNOSTIC else 1,
-            predict_boxes_when_training=self.model_cfg.get('ROI_HEAD', False)
-        )
-
-        model_info_dict['module_list'].append(point_head_module)
-        return point_head_module, model_info_dict
-
-    def build_roi_head(self, model_info_dict):
-        if self.model_cfg.get('ROI_HEAD', None) is None:
-            return None, model_info_dict
-        # point_head_module = roi_heads.__all__[self.model_cfg.ROI_HEAD.NAME](
-        #     model_cfg=self.model_cfg.ROI_HEAD,
-        #     input_channels=model_info_dict['num_point_features'],
-        #     backbone_channels= model_info_dict.get('backbone_channels', None),
-        #     point_cloud_range=model_info_dict['point_cloud_range'],
-        #     voxel_size=model_info_dict['voxel_size'],
-        #     num_class=self.num_class if not self.model_cfg.ROI_HEAD.CLASS_AGNOSTIC else 1,
-        # )
-        #
-        # model_info_dict['module_list'].append(point_head_module)
-        # return point_head_module, model_info_dict
 
     def forward(self, **kwargs):
         raise NotImplementedError
@@ -207,7 +137,7 @@ class Detector3DTemplate(nn.Module):
 
             box_preds = batch_dict['batch_box_preds'][batch_mask]
             src_box_preds = box_preds
-            
+
             if not isinstance(batch_dict['batch_cls_preds'], list):
                 cls_preds = batch_dict['batch_cls_preds'][batch_mask]
 
@@ -234,6 +164,7 @@ class Detector3DTemplate(nn.Module):
                 for cur_cls_preds, cur_label_mapping in zip(cls_preds, multihead_label_mapping):
                     assert cur_cls_preds.shape[1] == len(cur_label_mapping)
                     cur_box_preds = box_preds[cur_start_idx: cur_start_idx + cur_cls_preds.shape[0]]
+
                     cur_pred_scores, cur_pred_labels, cur_pred_boxes = model_nms_utils.multi_classes_nms(
                         cls_scores=cur_cls_preds, box_preds=cur_box_preds,
                         nms_config=post_process_cfg.NMS_CONFIG,
@@ -254,7 +185,8 @@ class Detector3DTemplate(nn.Module):
                     label_key = 'roi_labels' if 'roi_labels' in batch_dict else 'batch_pred_labels'
                     label_preds = batch_dict[label_key][index]
                 else:
-                    label_preds = label_preds + 1 
+                    label_preds = label_preds + 1
+
                 selected, selected_scores = model_nms_utils.class_agnostic_nms(
                     box_scores=cls_preds, box_preds=box_preds,
                     nms_config=post_process_cfg.NMS_CONFIG,
@@ -268,12 +200,12 @@ class Detector3DTemplate(nn.Module):
                 final_scores = selected_scores
                 final_labels = label_preds[selected]
                 final_boxes = box_preds[selected]
-                    
+
             recall_dict = self.generate_recall_record(
                 box_preds=final_boxes if 'rois' not in batch_dict else src_box_preds,
                 recall_dict=recall_dict, batch_index=index, data_dict=batch_dict,
                 thresh_list=post_process_cfg.RECALL_THRESH_LIST
-            )        
+            )
 
             record_dict = {
                 'pred_boxes': final_boxes,
@@ -335,19 +267,6 @@ class Detector3DTemplate(nn.Module):
 
         update_model_state = {}
         for key, val in model_state_disk.items():
-            # if key in spconv_keys and key in state_dict and state_dict[key].shape != val.shape:
-            #     # with different spconv versions, we need to adapt weight shapes for spconv blocks
-            #     # adapt spconv weights from version 1.x to version 2.x if you used weights from spconv 1.x
-            #
-            #     val_native = val.transpose(-1, -2)  # (k1, k2, k3, c_in, c_out) to (k1, k2, k3, c_out, c_in)
-            #     if val_native.shape == state_dict[key].shape:
-            #         val = val_native.contiguous()
-            #     else:
-            #         assert val.shape.__len__() == 5, 'currently only spconv 3D is supported'
-            #         val_implicit = val.permute(4, 0, 1, 2, 3)  # (k1, k2, k3, c_in, c_out) to (c_out, k1, k2, k3, c_in)
-            #         if val_implicit.shape == state_dict[key].shape:
-            #             val = val_implicit.contiguous()
-
             if key in state_dict and state_dict[key].shape == val.shape:
                 update_model_state[key] = val
                 # logger.info('Update weight %s: %s' % (key, str(val.shape)))
@@ -371,7 +290,7 @@ class Detector3DTemplate(nn.Module):
             pretrain_checkpoint = torch.load(pre_trained_path, map_location=loc_type)
             pretrain_model_state_disk = pretrain_checkpoint['model_state']
             model_state_disk.update(pretrain_model_state_disk)
-            
+
         version = checkpoint.get("version", None)
         if version is not None:
             logger.info('==> Checkpoint trained from version: %s' % version)

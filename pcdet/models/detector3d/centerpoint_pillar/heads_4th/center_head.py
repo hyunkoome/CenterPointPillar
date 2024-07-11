@@ -3,11 +3,11 @@ import numpy as np
 import torch
 # import torch.nn as nn
 # from torch.nn.init import kaiming_normal_
-from ..model_utils import model_nms_utils
-from ..model_utils import centernet_utils
-from ...utils import loss_utils
 from functools import partial
-from .center_separate_head import CenterSeparateHead
+from pcdet.utils import loss_utils
+from pcdet.models.model_utils import model_nms_utils
+from pcdet.models.detector3d.centerpoint_pillar import centernet_utils
+from pcdet.models.detector3d.centerpoint_pillar.heads_4th.center_separate_head import CenterSeparateHead
 
 
 class CenterHead(torch.nn.Module):

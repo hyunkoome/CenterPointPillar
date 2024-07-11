@@ -1,9 +1,8 @@
 import torch
 
-from pcdet.ops.iou3d_nms import iou3d_nms_utils
+from ...ops.iou3d_nms import iou3d_nms_utils
 
 
-# use
 def class_agnostic_nms(box_scores, box_preds, nms_config, score_thresh=None):
     src_box_scores = box_scores
     if score_thresh is not None:
@@ -25,7 +24,7 @@ def class_agnostic_nms(box_scores, box_preds, nms_config, score_thresh=None):
         selected = original_idxs[selected]
     return selected, src_box_scores[selected]
 
-# use
+
 def multi_classes_nms(cls_scores, box_preds, nms_config, score_thresh=None):
     """
     Args:

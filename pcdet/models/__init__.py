@@ -3,7 +3,7 @@ from collections import namedtuple
 import numpy as np
 import torch
 
-from .detectors import build_detector
+from pcdet.models.detector3d import build_detector
 
 try:
     import kornia

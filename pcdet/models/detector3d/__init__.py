@@ -1,8 +1,6 @@
-from .detector3d_template import Detector3DTemplate
-from .centerpoint import CenterPoint
+from pcdet.models.detector3d.centerpoint_pillar.centerpoint import CenterPoint
 
 __all__ = {
-    'Detector3DTemplate': Detector3DTemplate,
     'CenterPoint': CenterPoint,
 }
 
