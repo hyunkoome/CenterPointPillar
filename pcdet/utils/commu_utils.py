@@ -4,10 +4,7 @@ This is useful when doing distributed training.
 
 deeply borrow from maskrcnn-benchmark and ST3D
 """
-
 import pickle
-import time
-
 import torch
 import torch.distributed as dist
 

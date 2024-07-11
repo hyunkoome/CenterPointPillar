@@ -2,14 +2,12 @@ import os
 
 import torch
 import torch.nn as nn
-from ...ops.iou3d_nms import iou3d_nms_utils
-from ..model_utils import model_nms_utils
-
+from pcdet.ops.iou3d_nms import iou3d_nms_utils
+from pcdet.models.model_utils import model_nms_utils
 import pcdet.models.detector3d.centerpoint_pillar.voxel_feature_encoding_1st as vfe
 import pcdet.models.detector3d.centerpoint_pillar.to_bev_2nd as bev
 import pcdet.models.detector3d.centerpoint_pillar.backbones_3rd as backbones
 import pcdet.models.detector3d.centerpoint_pillar.heads_4th as head
-# from pcdet.models.detector3d import build_detector
 
 
 class Detector3DTemplate(nn.Module):
