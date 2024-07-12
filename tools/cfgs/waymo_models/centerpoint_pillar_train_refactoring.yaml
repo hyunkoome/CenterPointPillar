@@ -11,7 +11,7 @@ DATA_CONFIG:
         -   NAME: shuffle_points
             SHUFFLE_ENABLED: {
                 'train': True,
-                'test': True
+                'val': True
             }
 
         -   NAME: transform_points_to_voxels
@@ -19,7 +19,7 @@ DATA_CONFIG:
             MAX_POINTS_PER_VOXEL: 32
             MAX_NUMBER_OF_VOXELS: {
                 'train': 150000,
-                'test': 150000
+                'val': 150000
             }
 
 MODEL:

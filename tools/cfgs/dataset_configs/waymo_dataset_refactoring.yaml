@@ -1,17 +1,17 @@
 DATASET: 'WaymoDataset'
-DATA_PATH: '../data/waymo'
+DATA_PATH: './data/waymo'
 PROCESSED_DATA_TAG: 'waymo_processed_data_v0_5_0'
 
 POINT_CLOUD_RANGE: [-75.2, -75.2, -2, 75.2, 75.2, 4]
 
 DATA_SPLIT: {
     'train': train_refactoring,
-    'test': val_refactoring
+    'val': val_refactoring
 }
 
 SAMPLED_INTERVAL: {
-    'train': 5,
-    'test': 1
+    'train': 1,
+    'val': 1
 }
 
 FILTER_EMPTY_BOXES_FOR_TRAIN: True
@@ -60,7 +60,8 @@ DATA_AUGMENTOR:
 
 POINT_FEATURE_ENCODING: {
     encoding_type: absolute_coordinates_encoding,
-    used_feature_list: ['x', 'y', 'z', 'intensity', 'elongation'],
+    used_feature_list: ['x', 'y', 'z', 'intensity'],
+    #src_feature_list: ['x', 'y', 'z', 'intensity', 'elongation'],
     src_feature_list: ['x', 'y', 'z', 'intensity', 'elongation'],
 }
 
@@ -72,7 +73,7 @@ DATA_PROCESSOR:
     - NAME: shuffle_points
       SHUFFLE_ENABLED: {
         'train': True,
-        'test': True
+        'val': True
       }
 
     - NAME: transform_points_to_voxels
@@ -80,5 +81,5 @@ DATA_PROCESSOR:
       MAX_POINTS_PER_VOXEL: 5
       MAX_NUMBER_OF_VOXELS: {
         'train': 150000,
-        'test': 150000
+        'val': 150000
       }

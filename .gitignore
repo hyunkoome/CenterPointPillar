@@ -3,7 +3,7 @@
 **egg-info**
 **dist**
 raw_data/
-waymo_processed_data_v0_5_0
+**waymo_processed_data_**
 *.pyc
 venv/
 *.idea/
@@ -12,6 +12,7 @@ venv/
 *.sh
 *.pth
 *.pkl
+*.npy
 *.zip
 *.bin
 output
