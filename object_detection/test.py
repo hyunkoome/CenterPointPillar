@@ -1,4 +1,4 @@
-import _init_path
+# import _init_path
 import argparse
 import datetime
 import glob
@@ -11,7 +11,8 @@ import numpy as np
 import torch
 from tensorboardX import SummaryWriter
 
-from eval_utils import eval_utils
+# from eval_utils import eval_utils
+from general.utilities import eval_utils
 from general.config.config import cfg, cfg_from_list, cfg_from_yaml_file, log_config_to_file
 from object_detection.datasets import build_dataloader
 from object_detection.detectors3d import build_network

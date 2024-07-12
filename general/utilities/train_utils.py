@@ -206,9 +206,9 @@ def train_model(model, optimizer, train_loader, model_func, lr_scheduler, optim_
                 ckpt_list = glob.glob(str(ckpt_save_dir / 'checkpoint_epoch_*.pth'))
                 ckpt_list.sort(key=os.path.getmtime)
 
-                if ckpt_list.__len__() >= max_ckpt_save_num:
-                    for cur_file_idx in range(0, len(ckpt_list) - max_ckpt_save_num + 1):
-                        os.remove(ckpt_list[cur_file_idx])
+                # if ckpt_list.__len__() >= max_ckpt_save_num:
+                #     for cur_file_idx in range(0, len(ckpt_list) - max_ckpt_save_num + 1):
+                #         os.remove(ckpt_list[cur_file_idx])
 
                 ckpt_name = ckpt_save_dir / ('checkpoint_epoch_%d' % trained_epoch)
                 save_checkpoint(
