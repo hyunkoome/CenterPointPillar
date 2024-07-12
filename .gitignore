@@ -2,7 +2,8 @@
 **build**
 **egg-info**
 **dist**
-data/
+raw_data/
+waymo_processed_data_v0_5_0
 *.pyc
 venv/
 *.idea/

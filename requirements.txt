@@ -17,8 +17,11 @@ av2==0.2.1
 kornia==0.6.8
 pyquaternion==0.9.9
 colored==1.4.4
+cumm-cu120==0.4.11
+pccm==0.4.11
 opencv-python==4.2.0.34
 onnx==1.16.0
 onnxsim==0.4.36
 waymo-open-dataset-tf-2-12-0==1.6.4
 # pip install onnx_graphsurgeon --extra-index-url https://pypi.ngc.nvidia.com
+
