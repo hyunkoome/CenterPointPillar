@@ -1,7 +1,7 @@
 CLASS_NAMES: ['Vehicle', 'Pedestrian', 'Cyclist']
 
 DATA_CONFIG:
-    _BASE_CONFIG_: cfgs/dataset_configs/waymo_dataset_refactoring.yaml
+    _BASE_CONFIG_: tools/cfgs/dataset_configs/waymo_dataset_refactoring.yaml
 
     POINT_CLOUD_RANGE: [-75.52, -75.52, -2, 75.52, 75.52, 4.0]
     DATA_PROCESSOR:
@@ -94,7 +94,6 @@ MODEL:
     POST_PROCESSING:
         RECALL_THRESH_LIST: [0.3, 0.5, 0.7]
         EVAL_METRIC: waymo
-
 
 OPTIMIZATION:
     BATCH_SIZE_PER_GPU: 8

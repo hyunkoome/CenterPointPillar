@@ -738,12 +738,10 @@ def create_waymo_infos(dataset_cfg, class_names, data_path, save_path,
 
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     print('---------------Start to generate data infos---------------')
-    # dataset.set_split(mode=train_split, split=dataset_cfg.DATA_SPLIT[train_split])
     dataset.set_split(mode=train_split, split=dataset_cfg['DATA_SPLIT'][train_split])
     waymo_infos_train = dataset.get_infos(
         raw_data_path=data_path / raw_data_tag,
         save_path=save_path / processed_data_tag, num_workers=workers, has_label=True,
-        # sampled_interval=dataset_cfg.SAMPLED_INTERVAL[train_split], update_info_only=update_info_only,
         sampled_interval=dataset_cfg['SAMPLED_INTERVAL'][train_split], update_info_only=update_info_only,
     )
 
@@ -752,12 +750,10 @@ def create_waymo_infos(dataset_cfg, class_names, data_path, save_path,
         pickle.dump(waymo_infos_train, f)
     print('----------------Waymo info train file is saved to %s----------------' % train_filename)
 
-    # dataset.set_split(mode=val_split, split=dataset_cfg.DATA_SPLIT[val_split])
     dataset.set_split(mode=val_split, split=dataset_cfg['DATA_SPLIT'][val_split])
     waymo_infos_val = dataset.get_infos(
         raw_data_path=data_path / raw_data_tag,
         save_path=save_path / processed_data_tag, num_workers=workers, has_label=True,
-        # sampled_interval=dataset_cfg.SAMPLED_INTERVAL[val_split], update_info_only=update_info_only,
         sampled_interval = dataset_cfg['SAMPLED_INTERVAL'][val_split], update_info_only = update_info_only,
     )
 
@@ -771,11 +767,9 @@ def create_waymo_infos(dataset_cfg, class_names, data_path, save_path,
 
     print('---------------Start create groundtruth database for data augmentation---------------')
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-    # dataset.set_split(mode=train_split, split=dataset_cfg.DATA_SPLIT[train_split])
     dataset.set_split(mode=train_split, split=dataset_cfg['DATA_SPLIT'][train_split])
     dataset.create_groundtruth_database(
         info_path=train_filename, save_path=save_path, split=train_split,
-        # sampled_interval=dataset_cfg.SAMPLED_INTERVAL[train_split],
         sampled_interval=dataset_cfg['SAMPLED_INTERVAL'][train_split],
         used_classes=class_names, processed_data_tag=processed_data_tag
     )
@@ -793,12 +787,10 @@ def create_waymo_gt_database(
     train_filename = save_path / ('%s_infos_%s.pkl' % (processed_data_tag, train_split))
 
     print('---------------Start create groundtruth database for data augmentation---------------')
-    # dataset.set_split(mode=train_split, split=dataset_cfg.DATA_SPLIT[train_split])
     dataset.set_split(mode=train_split, split=dataset_cfg['DATA_SPLIT'][train_split])
     if use_parallel:
         dataset.create_groundtruth_database_parallel(
             info_path=train_filename, save_path=save_path, split=train_split,
-            # sampled_interval=dataset_cfg.SAMPLED_INTERVAL[train_split],
             sampled_interval=dataset_cfg['SAMPLED_INTERVAL'][train_split],
             used_classes=class_names, processed_data_tag=processed_data_tag,
             num_workers=workers, crop_gt_with_tail=crop_gt_with_tail
@@ -806,7 +798,6 @@ def create_waymo_gt_database(
     else:
         dataset.create_groundtruth_database(
             info_path=train_filename, save_path=save_path, split=train_split,
-            # sampled_interval=dataset_cfg.SAMPLED_INTERVAL[train_split],
             sampled_interval=dataset_cfg['SAMPLED_INTERVAL'][train_split],
             used_classes=class_names, processed_data_tag=processed_data_tag
         )
@@ -827,19 +818,13 @@ if __name__ == '__main__':
     parser.add_argument('--wo_crop_gt_with_tail', action='store_true', default=False, help='')
 
     args = parser.parse_args()
-    # sys.path.insert(0, '../')
     ROOT_DIR = (Path(__file__).resolve().parent / '../../../').resolve()
     waymo_class_names = ['Vehicle', 'Pedestrian', 'Cyclist']
 
-    # try:
-    #     yaml_config = yaml.safe_load(open(Path(ROOT_DIR).joinpath(args.cfg_file), Loader=yaml.FullLoader))
-    # except:
-    #     yaml_config = yaml.safe_load(open(Path(ROOT_DIR).joinpath(args.cfg_file)))
     yaml_config = yaml.safe_load(open(Path(ROOT_DIR).joinpath(args.cfg_file)))
 
     dataset_cfg = EasyDict(yaml_config)
     dataset_cfg.PROCESSED_DATA_TAG = args.processed_data_tag
-    # data_save_path = Path(ROOT_DIR).joinpath(dataset_cfg.DATA_PATH).absolute()
     data_save_path = Path(ROOT_DIR).joinpath(dataset_cfg['DATA_PATH']).absolute()
 
     if args.func == 'create_waymo_infos':

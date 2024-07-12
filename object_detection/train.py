@@ -10,13 +10,12 @@ import torch.nn as nn
 from tensorboardX import SummaryWriter
 
 from general.config.config import cfg, cfg_from_list, cfg_from_yaml_file, log_config_to_file
-from object_detection.datasets import build_dataloader
-from object_detection.detectors3d import build_network, model_fn_decorator
-
 from general.optimization import build_optimizer, build_scheduler
 from general.utilities import common_utils
 from general.utilities.train_utils import train_model
 
+from object_detection.datasets import build_dataloader
+from object_detection.detectors3d import build_network, model_fn_decorator
 
 def parse_config():
     parser = argparse.ArgumentParser(description='arg parser')
