@@ -1,7 +1,6 @@
-from pathlib import Path
-
 import yaml
 from easydict import EasyDict
+from pathlib import Path
 
 
 def log_config_to_file(cfg, pre='cfg', logger=None):
@@ -50,12 +49,14 @@ def cfg_from_list(cfg_list, config):
 
 def merge_new_config(config, new_config):
     if '_BASE_CONFIG_' in new_config:
-        with open(Path(cfg.ROOT_DIR).joinpath(new_config['_BASE_CONFIG_']), 'r') as f:
         # with open(new_config['_BASE_CONFIG_'], 'r') as f:
-            try:
-                yaml_config = yaml.safe_load(f, Loader=yaml.FullLoader)
-            except:
-                yaml_config = yaml.safe_load(f)
+        #     try:
+        #         yaml_config = yaml.safe_load(f, Loader=yaml.FullLoader)
+        #     except:
+        #         yaml_config = yaml.safe_load(f)
+        # config.update(EasyDict(yaml_config))
+        with open(Path(cfg.ROOT_DIR).joinpath(new_config['_BASE_CONFIG_']), 'r') as f:
+            yaml_config = yaml.safe_load(f)
         config.update(EasyDict(yaml_config))
 
     for key, val in new_config.items():
@@ -70,22 +71,21 @@ def merge_new_config(config, new_config):
 
 
 def cfg_from_yaml_file(cfg_file, config):
-    # args.cfg_file = Path((Path(__file__).resolve().parent / '../').resolve()).joinpath(args.cfg_file)
     load_cfg_file = Path(cfg.ROOT_DIR).joinpath(cfg_file)
     # with open(cfg_file, 'r') as f:
+    #     try:
+    #         new_config = yaml.safe_load(f, Loader=yaml.FullLoader)
+    #     except:
+    #         new_config = yaml.safe_load(f)
+    #
+    #     merge_new_config(config=config, new_config=new_config)
     with open(load_cfg_file, 'r') as f:
-        try:
-            new_config = yaml.safe_load(f, Loader=yaml.FullLoader)
-        except:
-            new_config = yaml.safe_load(f)
-
+        new_config = yaml.safe_load(f)
         merge_new_config(config=config, new_config=new_config)
 
     return config
 
 
 cfg = EasyDict()
-# cfg.ROOT_DIR = (Path(__file__).resolve().parent / '../../../').resolve()
 cfg.ROOT_DIR = (Path(__file__).resolve().parent / '../../').resolve()
-# cfg.ROOT_DIR = (Path(__file__).resolve().parent / '../').resolve()
 cfg.LOCAL_RANK = 0
