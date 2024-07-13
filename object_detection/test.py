@@ -242,11 +242,13 @@ def main():
 
     with torch.no_grad():
         if args.TensorRT:
-            eval_single_ckpt_with_TensorRT(model, test_loader, args, eval_output_dir, logger, epoch_id,
+            eval_single_ckpt_with_TensorRT(model=model, test_loader=test_loader, args=args,
+                                           eval_output_dir=eval_output_dir, logger=logger, epoch_id=epoch_id,
                                            dist_test=dist_test)
         else:
             if args.eval_all:
-                repeat_eval_ckpt(model, test_loader, args, eval_output_dir, logger, ckpt_dir, dist_test=dist_test)
+                repeat_eval_ckpt(model=model, test_loader=test_loader, args=args, eval_output_dir=eval_output_dir,
+                                 logger=logger, ckpt_dir=ckpt_dir, dist_test=dist_test)
             else:
                 # eval_single_ckpt(model, test_loader, args, eval_output_dir, logger, epoch_id, dist_test=dist_test)
                 eval_target_ckpt(model=model, test_loader=test_loader, args=args, eval_output_dir=eval_output_dir,
