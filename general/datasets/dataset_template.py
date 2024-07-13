@@ -18,26 +18,25 @@ class DatasetTemplate(torch_data.Dataset):
         self.training = training
         self.class_names = class_names
         self.logger = logger
-        # self.root_path = root_path if root_path is not None else Path(self.dataset_cfg.DATA_PATH)
+
         self.root_path = root_path if root_path is not None else Path(
             Path(__file__).resolve().parent / '../../').resolve().joinpath(self.dataset_cfg.DATA_PATH)
-        # ROOT_DIR = (Path(__file__).resolve().parent / '../../../').resolve()
-        self.logger = logger
+
         if self.dataset_cfg is None or class_names is None:
             return
 
         self.point_cloud_range = np.array(self.dataset_cfg.POINT_CLOUD_RANGE, dtype=np.float32)
-        self.point_feature_encoder = PointFeatureEncoder(
-            self.dataset_cfg.POINT_FEATURE_ENCODING,
-            point_cloud_range=self.point_cloud_range
-        )
-        self.data_augmentor = DataAugmentor(
-            self.root_path, self.dataset_cfg.DATA_AUGMENTOR, self.class_names, logger=self.logger
-        ) if self.training else None
-        self.data_processor = DataProcessor(
-            self.dataset_cfg.DATA_PROCESSOR, point_cloud_range=self.point_cloud_range,
-            training=self.training, num_point_features=self.point_feature_encoder.num_point_features
-        )
+        self.point_feature_encoder = PointFeatureEncoder(config=self.dataset_cfg.POINT_FEATURE_ENCODING,
+                                                         point_cloud_range=self.point_cloud_range)
+
+        self.data_augmentor = DataAugmentor(root_path=self.root_path, augmentor_configs=self.dataset_cfg.DATA_AUGMENTOR,
+                                            class_names=self.class_names,
+                                            logger=self.logger) if self.training else None
+
+        self.data_processor = DataProcessor(processor_configs=self.dataset_cfg.DATA_PROCESSOR,
+                                            point_cloud_range=self.point_cloud_range,
+                                            training=self.training,
+                                            num_point_features=self.point_feature_encoder.num_point_features)
 
         self.grid_size = self.data_processor.grid_size
         self.voxel_size = self.data_processor.voxel_size

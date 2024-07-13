@@ -5,78 +5,9 @@ from skimage import transform
 import torch
 import torchvision
 
-from spconv.utils import Point2VoxelCPU3d as VoxelGenerator
-
+from general.datasets.processor.voxel_generator_spconv import VoxelGeneratorSPConv
+from general.datasets.processor.voxel_generator import VoxelGenerator
 from general.utilities import box_utils, common_utils
-
-tv = None
-try:
-    import cumm.tensorview as tv
-except:
-    pass
-
-
-class VoxelGeneratorWrapper():
-    def __init__(self, vsize_xyz, coors_range_xyz, num_point_features, max_num_points_per_voxel, max_num_voxels):
-
-        # try:
-        #     from spconv.utils import VoxelGeneratorV2 as VoxelGenerator
-        #     self.spconv_ver = 1
-        # except:
-        #     try:
-        #         from spconv.utils import VoxelGenerator
-        #         self.spconv_ver = 1
-        #     except:
-        #
-        #         self.spconv_ver = 2
-        #
-        # if self.spconv_ver == 1:
-        #     self._voxel_generator = VoxelGenerator(
-        #         voxel_size=vsize_xyz,
-        #         point_cloud_range=coors_range_xyz,
-        #         max_num_points=max_num_points_per_voxel,
-        #         max_voxels=max_num_voxels
-        #     )
-        # else:
-        #     self._voxel_generator = VoxelGenerator(
-        #         vsize_xyz=vsize_xyz,
-        #         coors_range_xyz=coors_range_xyz,
-        #         num_point_features=num_point_features,
-        #         max_num_points_per_voxel=max_num_points_per_voxel,
-        #         max_num_voxels=max_num_voxels
-        #     )
-        self._voxel_generator = VoxelGenerator(
-            vsize_xyz=vsize_xyz,
-            coors_range_xyz=coors_range_xyz,
-            num_point_features=num_point_features,
-            max_num_points_per_voxel=max_num_points_per_voxel,
-            max_num_voxels=max_num_voxels
-        )
-
-    def generate(self, points):
-        # if self.spconv_ver == 1:
-        #     voxel_output = self._voxel_generator.generate(points)
-        #     if isinstance(voxel_output, dict):
-        #         voxels, coordinates, num_points = \
-        #             voxel_output['voxels'], voxel_output['coordinates'], voxel_output['num_points_per_voxel']
-        #     else:
-        #         voxels, coordinates, num_points = voxel_output
-        # else:
-        #     assert tv is not None, f"Unexpected error, library: 'cumm' wasn't imported properly."
-        #     voxel_output = self._voxel_generator.point_to_voxel(tv.from_numpy(points))
-        #     tv_voxels, tv_coordinates, tv_num_points = voxel_output
-        #     # make copy with numpy(), since numpy_view() will disappear as soon as the generator is deleted
-        #     voxels = tv_voxels.numpy()
-        #     coordinates = tv_coordinates.numpy()
-        #     num_points = tv_num_points.numpy()
-        assert tv is not None, f"Unexpected error, library: 'cumm' wasn't imported properly."
-        voxel_output = self._voxel_generator.point_to_voxel(tv.from_numpy(points))
-        tv_voxels, tv_coordinates, tv_num_points = voxel_output
-        # make copy with numpy(), since numpy_view() will disappear as soon as the generator is deleted
-        voxels = tv_voxels.numpy()
-        coordinates = tv_coordinates.numpy()
-        num_points = tv_num_points.numpy()
-        return voxels, coordinates, num_points
 
 
 class DataProcessor(object):
@@ -105,7 +36,7 @@ class DataProcessor(object):
 
         if data_dict.get('gt_boxes', None) is not None and config.REMOVE_OUTSIDE_BOXES and self.training:
             mask = box_utils.mask_boxes_outside_range_numpy(
-                data_dict['gt_boxes'], self.point_cloud_range, min_num_corners=config.get('min_num_corners', 1), 
+                data_dict['gt_boxes'], self.point_cloud_range, min_num_corners=config.get('min_num_corners', 1),
                 use_center_to_filter=config.get('USE_CENTER_TO_FILTER', True)
             )
             data_dict['gt_boxes'] = data_dict['gt_boxes'][mask]
@@ -130,7 +61,7 @@ class DataProcessor(object):
             self.grid_size = np.round(grid_size).astype(np.int64)
             self.voxel_size = config.VOXEL_SIZE
             return partial(self.transform_points_to_voxels_placeholder, config=config)
-        
+
         return data_dict
 
     def double_flip(self, points):
@@ -159,12 +90,74 @@ class DataProcessor(object):
             return partial(self.transform_points_to_voxels, config=config)
 
         if self.voxel_generator is None:
-            self.voxel_generator = VoxelGeneratorWrapper(
+            self.voxel_generator = VoxelGeneratorSPConv(
                 vsize_xyz=config.VOXEL_SIZE,
                 coors_range_xyz=self.point_cloud_range,
                 num_point_features=self.num_point_features,
                 max_num_points_per_voxel=config.MAX_POINTS_PER_VOXEL,
                 max_num_voxels=config.MAX_NUMBER_OF_VOXELS[self.mode],
+            )
+
+        points = data_dict['points']
+        voxel_output = self.voxel_generator.generate(points)
+        voxels, coordinates, num_points = voxel_output
+
+        if not data_dict['use_lead_xyz']:
+            voxels = voxels[..., 3:]  # remove xyz in voxels(N, 3)
+
+        if config.get('DOUBLE_FLIP', False):
+            voxels_list, voxel_coords_list, voxel_num_points_list = [voxels], [coordinates], [num_points]
+            points_yflip, points_xflip, points_xyflip = self.double_flip(points)
+            points_list = [points_yflip, points_xflip, points_xyflip]
+            keys = ['yflip', 'xflip', 'xyflip']
+            for i, key in enumerate(keys):
+                voxel_output = self.voxel_generator.generate(points_list[i])
+                voxels, coordinates, num_points = voxel_output
+
+                if not data_dict['use_lead_xyz']:
+                    voxels = voxels[..., 3:]
+                voxels_list.append(voxels)
+                voxel_coords_list.append(coordinates)
+                voxel_num_points_list.append(num_points)
+
+            data_dict['voxels'] = voxels_list
+            data_dict['voxel_coords'] = voxel_coords_list
+            data_dict['voxel_num_points'] = voxel_num_points_list
+        else:
+            data_dict['voxels'] = voxels
+            data_dict['voxel_coords'] = coordinates
+            data_dict['voxel_num_points'] = num_points
+        return data_dict
+
+    def transform_points_to_voxels_no_spconv(self, data_dict=None, config=None):
+        """
+        I implemented transform_points_to_voxels, not using spconv`
+        When comparing two functions between `transform_points_to_voxels` and `transform_points_to_voxels_no_spconv`,
+            - training speed of both functions is similar,
+            - but `transform_points_to_voxels` with spconv has slightly better performance.
+        Therefore, I recommend using `transform_points_to_voxels` instead of `transform_points_to_voxels_no_spconv`.
+        Set on the models/yaml file as follows:
+            DATA_CONFIG
+                DATA_PROCESSOR
+                    -   NAME: transform_points_to_voxels
+
+        Args:
+            data_dict:
+            config:
+        Returns:
+        """
+        if data_dict is None:
+            grid_size = (self.point_cloud_range[3:6] - self.point_cloud_range[0:3]) / np.array(config.VOXEL_SIZE)
+            self.grid_size = np.round(grid_size).astype(np.int64)
+            self.voxel_size = config.VOXEL_SIZE
+            return partial(self.transform_points_to_voxels_no_spconv, config=config)
+
+        if self.voxel_generator is None:
+            self.voxel_generator = VoxelGenerator(
+                voxel_size=config.VOXEL_SIZE,
+                point_cloud_range=self.point_cloud_range,
+                max_num_points=config.MAX_POINTS_PER_VOXEL,
+                max_voxels=config.MAX_NUMBER_OF_VOXELS[self.mode]
             )
 
         points = data_dict['points']
@@ -217,7 +210,7 @@ class DataProcessor(object):
                 near_idxs_choice = np.random.choice(near_idxs, num_points - len(far_idxs_choice), replace=False)
                 choice = np.concatenate((near_idxs_choice, far_idxs_choice), axis=0) \
                     if len(far_idxs_choice) > 0 else near_idxs_choice
-            else: 
+            else:
                 choice = np.arange(0, len(points), dtype=np.int32)
                 choice = np.random.choice(choice, num_points, replace=False)
             np.random.shuffle(choice)
@@ -248,7 +241,7 @@ class DataProcessor(object):
             factors=(self.depth_downsample_factor, self.depth_downsample_factor)
         )
         return data_dict
-    
+
     def image_normalize(self, data_dict=None, config=None):
         if data_dict is None:
             return partial(self.image_normalize, config=config)
@@ -262,8 +255,8 @@ class DataProcessor(object):
         )
         data_dict["camera_imgs"] = [compose(img) for img in data_dict["camera_imgs"]]
         return data_dict
-    
-    def image_calibrate(self,data_dict=None, config=None):
+
+    def image_calibrate(self, data_dict=None, config=None):
         if data_dict is None:
             return partial(self.image_calibrate, config=config)
         img_process_infos = data_dict['img_process_infos']

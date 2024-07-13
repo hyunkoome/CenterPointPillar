@@ -14,7 +14,7 @@ DATA_CONFIG:
                 'val': True
             }
 
-        -   NAME: transform_points_to_voxels
+        -   NAME: transform_points_to_voxels # transform_points_to_voxels  # transform_points_to_voxels_no_spconv
             VOXEL_SIZE: [ 0.32, 0.32, 6.0 ]
             MAX_POINTS_PER_VOXEL: 32
             MAX_NUMBER_OF_VOXELS: {
@@ -97,7 +97,7 @@ MODEL:
 
 OPTIMIZATION:
     BATCH_SIZE_PER_GPU: 8
-    NUM_EPOCHS: 10 # 30
+    NUM_EPOCHS: 5 # 30
 
     OPTIMIZER: adam_onecycle
     LR: 0.005
