@@ -17,12 +17,13 @@ from general.utilities import eval_utils
 from object_detection.datasets import build_dataloader
 from object_detection.detectors3d import build_network
 
-
 try:
     import cp
+
     print("Pybind imported!!")
 except:
     print("No Pybind!!")
+
 
 def parse_config():
     parser = argparse.ArgumentParser(description='arg parser')
@@ -64,21 +65,37 @@ def parse_config():
 
 def eval_single_ckpt(model, test_loader, args, eval_output_dir, logger, epoch_id, dist_test=False):
     # load checkpoint
-    model.load_params_from_file(filename=args.ckpt, logger=logger, to_cpu=dist_test, 
+    model.load_params_from_file(filename=args.ckpt, logger=logger, to_cpu=dist_test,
                                 pre_trained_path=args.pretrained_model)
     model.cuda()
-    
+
     # start evaluation
     eval_utils.eval_one_epoch(
-        cfg, args, model, test_loader, epoch_id, logger, dist_test=dist_test,
+        cfg=cfg, args=args, model=model, dataloader=test_loader, logger=logger, dist_test=dist_test, epoch_id=epoch_id,
         result_dir=eval_output_dir
     )
+
+
+def eval_target_ckpt(model, test_loader, args, eval_output_dir, logger, dist_test=False):
+    ckpt_full_path = Path(args.ckpt_dir).joinpath(args.ckpt) if args.ckpt_dir is not None else args.ckpt
+    # load checkpoint
+    model.load_params_from_file(filename=ckpt_full_path, logger=logger, to_cpu=dist_test,
+                                pre_trained_path=args.pretrained_model)
+    model.cuda()
+
+    # start evaluation
+    eval_utils.eval_one_epoch(
+        cfg=cfg, args=args, model=model, dataloader=test_loader, logger=logger, dist_test=dist_test,
+        result_dir=eval_output_dir
+    )
+
 
 def eval_single_ckpt_with_TensorRT(model, test_loader, args, eval_output_dir, logger, epoch_id, dist_test=False):
     eval_utils.eval_one_epoch_with_tensorrt(
         cfg, args, model, test_loader, epoch_id, logger, dist_test=dist_test,
         result_dir=eval_output_dir
     )
+
 
 def get_no_evaluated_ckpt(ckpt_dir, ckpt_record_file, args):
     ckpt_list = glob.glob(os.path.join(ckpt_dir, '*checkpoint_epoch_*.pth'))
@@ -100,13 +117,13 @@ def get_no_evaluated_ckpt(ckpt_dir, ckpt_record_file, args):
 
 def repeat_eval_ckpt(model, test_loader, args, eval_output_dir, logger, ckpt_dir, dist_test=False):
     # evaluated ckpt record
-    ckpt_record_file = eval_output_dir / ('eval_list_%s.txt' % cfg.DATA_CONFIG.DATA_SPLIT['test'])
+    ckpt_record_file = eval_output_dir / ('eval_list_%s.txt' % cfg.DATA_CONFIG.DATA_SPLIT['val'])
     with open(ckpt_record_file, 'a'):
         pass
 
     # tensorboard log
     if cfg.LOCAL_RANK == 0:
-        tb_log = SummaryWriter(log_dir=str(eval_output_dir / ('tensorboard_%s' % cfg.DATA_CONFIG.DATA_SPLIT['test'])))
+        tb_log = SummaryWriter(log_dir=str(eval_output_dir / ('tensorboard_%s' % cfg.DATA_CONFIG.DATA_SPLIT['val'])))
     total_time = 0
     first_eval = True
 
@@ -131,7 +148,7 @@ def repeat_eval_ckpt(model, test_loader, args, eval_output_dir, logger, ckpt_dir
         model.cuda()
 
         # start evaluation
-        cur_result_dir = eval_output_dir / ('epoch_%s' % cur_epoch_id) / cfg.DATA_CONFIG.DATA_SPLIT['test']
+        cur_result_dir = eval_output_dir / ('epoch_%s' % cur_epoch_id) / cfg.DATA_CONFIG.DATA_SPLIT['val']
         tb_dict = eval_utils.eval_one_epoch(
             cfg, args, model, test_loader, cur_epoch_id, logger, dist_test=dist_test,
             result_dir=cur_result_dir
@@ -181,7 +198,7 @@ def main():
     if not args.eval_all:
         num_list = re.findall(r'\d+', args.ckpt) if args.ckpt is not None else []
         epoch_id = num_list[-1] if num_list.__len__() > 0 else 'no_number'
-        eval_output_dir = eval_output_dir / ('epoch_%s' % epoch_id) / cfg.DATA_CONFIG.DATA_SPLIT['test']
+        eval_output_dir = eval_output_dir / ('epoch_%s' % epoch_id) / cfg.DATA_CONFIG.DATA_SPLIT['val']
     else:
         eval_output_dir = eval_output_dir / 'eval_all_default'
 
@@ -224,12 +241,15 @@ def main():
 
     with torch.no_grad():
         if args.TensorRT:
-            eval_single_ckpt_with_TensorRT(model, test_loader, args, eval_output_dir, logger, epoch_id, dist_test=dist_test)
+            eval_single_ckpt_with_TensorRT(model, test_loader, args, eval_output_dir, logger, epoch_id,
+                                           dist_test=dist_test)
         else:
             if args.eval_all:
                 repeat_eval_ckpt(model, test_loader, args, eval_output_dir, logger, ckpt_dir, dist_test=dist_test)
             else:
-                eval_single_ckpt(model, test_loader, args, eval_output_dir, logger, epoch_id, dist_test=dist_test)
+                # eval_single_ckpt(model, test_loader, args, eval_output_dir, logger, epoch_id, dist_test=dist_test)
+                eval_target_ckpt(model=model, test_loader=test_loader, args=args, eval_output_dir=eval_output_dir,
+                                 logger=logger, dist_test=dist_test)
 
 
 if __name__ == '__main__':

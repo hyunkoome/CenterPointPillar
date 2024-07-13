@@ -18,7 +18,7 @@ class DatasetTemplate(torch_data.Dataset):
         self.training = training
         self.class_names = class_names
         self.logger = logger
-        self.root_path = root_path if root_path is not None else Path(self.dataset_cfg.DATA_PATH)
+        # self.root_path = root_path if root_path is not None else Path(self.dataset_cfg.DATA_PATH)
         self.root_path = root_path if root_path is not None else Path(
             Path(__file__).resolve().parent / '../../').resolve().joinpath(self.dataset_cfg.DATA_PATH)
         # ROOT_DIR = (Path(__file__).resolve().parent / '../../../').resolve()

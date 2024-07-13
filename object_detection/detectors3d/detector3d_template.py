@@ -5,6 +5,7 @@ import torch.nn as nn
 from pcdet.ops.iou3d_nms import iou3d_nms_utils
 # from pcdet.models.model_utils import model_nms_utils
 from general.networks import nms_utils # as model_nms_utils
+from general.utilities.spconv_utils import find_all_spconv_keys
 import object_detection.detectors3d.centerpoint_pillar.voxel_feature_encoding_1st as vfe
 import object_detection.detectors3d.centerpoint_pillar.to_bev_2nd as bev
 import object_detection.detectors3d.centerpoint_pillar.backbones_3rd as backbones
@@ -19,11 +20,13 @@ class Detector3DTemplate(nn.Module):
         self.dataset = dataset
         self.class_names = dataset.class_names
         self.register_buffer('global_step', torch.LongTensor(1).zero_())
-        self.module_topology = ['vfe', 'bev', 'backbones', 'head']
+        # self.module_topology = ['vfe', 'bev', 'backbones', 'head']
+        self.module_topology = ['vfe', 'bev', 'backbone_2d', 'dense_head']
 
     @property
     def mode(self):
-        return 'TRAIN' if self.training else 'TEST'
+        # return 'TRAIN' if self.training else 'TEST'
+        return 'train' if self.training else 'val'
 
     def update_global_step(self):
         self.global_step += 1
@@ -73,7 +76,7 @@ class Detector3DTemplate(nn.Module):
         model_info_dict['num_bev_features'] = bev_module.num_bev_features
         return bev_module, model_info_dict
 
-    def build_backbones(self, model_info_dict):
+    def build_backbone_2d(self, model_info_dict):
         if self.model_cfg.get('BACKBONE_2D', None) is None:
             return None, model_info_dict
 
@@ -85,7 +88,7 @@ class Detector3DTemplate(nn.Module):
         model_info_dict['num_bev_features'] = backbone_2d_module.num_bev_features
         return backbone_2d_module, model_info_dict
 
-    def build_head(self, model_info_dict):
+    def build_dense_head(self, model_info_dict):
         if self.model_cfg.get('DENSE_HEAD', None) is None:
             return None, model_info_dict
         dense_head_module = head.__all__[self.model_cfg.DENSE_HEAD.NAME](
@@ -262,10 +265,23 @@ class Detector3DTemplate(nn.Module):
     def _load_state_dict(self, model_state_disk, *, strict=True):
         state_dict = self.state_dict()  # local cache of state_dict
 
-        # spconv_keys = find_all_spconv_keys(self)
+        spconv_keys = find_all_spconv_keys(self)
 
         update_model_state = {}
         for key, val in model_state_disk.items():
+            if key in spconv_keys and key in state_dict and state_dict[key].shape != val.shape:
+                # with different spconv versions, we need to adapt weight shapes for spconv blocks
+                # adapt spconv weights from version 1.x to version 2.x if you used weights from spconv 1.x
+
+                val_native = val.transpose(-1, -2)  # (k1, k2, k3, c_in, c_out) to (k1, k2, k3, c_out, c_in)
+                if val_native.shape == state_dict[key].shape:
+                    val = val_native.contiguous()
+                else:
+                    assert val.shape.__len__() == 5, 'currently only spconv 3D is supported'
+                    val_implicit = val.permute(4, 0, 1, 2, 3)  # (k1, k2, k3, c_in, c_out) to (c_out, k1, k2, k3, c_in)
+                    if val_implicit.shape == state_dict[key].shape:
+                        val = val_implicit.contiguous()
+
             if key in state_dict and state_dict[key].shape == val.shape:
                 update_model_state[key] = val
                 # logger.info('Update weight %s: %s' % (key, str(val.shape)))

@@ -84,7 +84,8 @@ class DataProcessor(object):
         self.point_cloud_range = point_cloud_range
         self.training = training
         self.num_point_features = num_point_features
-        self.mode = 'train' if training else 'test'
+        # self.mode = 'train' if training else 'test'
+        self.mode = 'train' if training else 'val'
         self.grid_size = self.voxel_size = None
         self.data_processor_queue = []
 

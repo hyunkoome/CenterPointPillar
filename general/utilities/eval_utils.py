@@ -5,6 +5,7 @@ import time
 import torch
 import tqdm
 
+from pathlib import Path
 from general.utilities.data_utils import load_data_to_gpu
 from general.utilities import common_utils
 
@@ -16,10 +17,14 @@ def statistics_info(cfg, ret_dict, metric, disp_dict):
     metric['gt_num'] += ret_dict.get('gt', 0)
     min_thresh = cfg.MODEL.POST_PROCESSING.RECALL_THRESH_LIST[0]
     disp_dict['recall_%s' % str(min_thresh)] = \
-        '(%d, %d) / %d' % (metric['recall_roi_%s' % str(min_thresh)], metric['recall_rcnn_%s' % str(min_thresh)], metric['gt_num'])
+        '(%d, %d) / %d' % (
+            metric['recall_roi_%s' % str(min_thresh)], metric['recall_rcnn_%s' % str(min_thresh)], metric['gt_num'])
 
 
-def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=False, result_dir=None):
+# def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=False, result_dir=None):
+def eval_one_epoch(cfg, args, model, dataloader, logger, dist_test=False, epoch_id=None, result_dir=None):
+    epoch_id = epoch_id if epoch_id is not None else Path(args.ckpt).stem
+
     result_dir.mkdir(parents=True, exist_ok=True)
 
     final_output_dir = result_dir / 'final_result' / 'data'
@@ -46,9 +51,9 @@ def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=Fal
         num_gpus = torch.cuda.device_count()
         local_rank = cfg.LOCAL_RANK % num_gpus
         model = torch.nn.parallel.DistributedDataParallel(
-                model,
-                device_ids=[local_rank],
-                broadcast_buffers=False
+            model,
+            device_ids=[local_rank],
+            broadcast_buffers=False
         )
     model.eval()
 
@@ -152,7 +157,7 @@ def box_to_dict(boxes):
     pred_boxes = torch.tensor(pred_boxes).cuda()
     pred_scores = torch.tensor(pred_scores).cuda()
     pred_labels = torch.tensor(pred_labels).cuda()
-    
+
     return [{'pred_boxes': pred_boxes,
              'pred_scores': pred_scores,
              'pred_labels': pred_labels}]
