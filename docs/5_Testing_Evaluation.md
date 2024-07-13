@@ -5,6 +5,11 @@
 ```shell script
 python test.py --cfg_file ${CONFIG_FILE} --batch_size ${BATCH_SIZE} --ckpt ${CKPT}
 ```
+- for examples
+```shell script
+python test.py --cfg_file tools/cfgs/waymo_models/centerpoint_pillar_train_refactoring.yaml --ckpt /home/hyunkoo/DATA/HDD8TB/LiDAR/CenterPointPillarLocal/ckpt/checkpoint_epoch_24.pth
+python test.py --cfg_file tools/cfgs/waymo_models/centerpoint_pillar_train_refactoring.yaml --ckpt checkpoint_epoch_24.pth --ckpt_dir /home/hyunkoo/DATA/HDD8TB/LiDAR/CenterPointPillarLocal/ckpt
+```
 
 * To test all the saved checkpoints of a specific training setting and draw the performance curve on the Tensorboard, add the `--eval_all` argument:
 ```shell script
