@@ -3,21 +3,21 @@
 ### 1. Test and evaluate the pretrained `pytorch` models
 * Test with a pretrained model:
 ```shell script
-python test.py --cfg_file ${CONFIG_FILE} --batch_size ${BATCH_SIZE} --ckpt ${CKPT}
+python object_detection/test.py --cfg_file ${CONFIG_FILE} --batch_size ${BATCH_SIZE} --ckpt ${CKPT}
 ```
 - for examples
 ```shell script
-python test.py --cfg_file tools/cfgs/waymo_models/centerpoint_pillar_train_refactoring.yaml --ckpt /home/hyunkoo/DATA/HDD8TB/LiDAR/CenterPointPillarLocal/ckpt/checkpoint_epoch_24.pth
-python test.py --cfg_file tools/cfgs/waymo_models/centerpoint_pillar_train_refactoring.yaml --ckpt checkpoint_epoch_24.pth --ckpt_dir /home/hyunkoo/DATA/HDD8TB/LiDAR/CenterPointPillarLocal/ckpt
+python object_detection/test.py --cfg_file tools/cfgs/waymo_models/centerpoint_pillar_train_refactoring.yaml --ckpt /home/hyunkoo/DATA/HDD8TB/LiDAR/CenterPointPillarLocal/ckpt/checkpoint_epoch_24.pth
+python object_detection/test.py --cfg_file tools/cfgs/waymo_models/centerpoint_pillar_train_refactoring.yaml --ckpt checkpoint_epoch_24.pth --ckpt_dir /home/hyunkoo/DATA/HDD8TB/LiDAR/CenterPointPillarLocal/ckpt
 ```
 
 * To test all the saved checkpoints of a specific training setting and draw the performance curve on the Tensorboard, add the `--eval_all` argument:
 ```shell script
-python test.py --cfg_file ${CONFIG_FILE} --batch_size ${BATCH_SIZE} --eval_all
+python object_detection/test.py --cfg_file ${CONFIG_FILE} --batch_size ${BATCH_SIZE} --eval_all
 ```
 - for examples
 ```shell script
-python test.py --cfg_file tools/cfgs/waymo_models/centerpoint_pillar_train_refactoring.yaml --ckpt_dir /home/hyunkoo/DATA/HDD8TB/LiDAR/CenterPointPillarLocal/ckpt --eval_all
+python object_detection/test.py --cfg_file tools/cfgs/waymo_models/centerpoint_pillar_train_refactoring.yaml --ckpt_dir /home/hyunkoo/DATA/HDD8TB/LiDAR/CenterPointPillarLocal/ckpt --eval_all
 ```
 
 * To test with multiple GPUs:
@@ -34,8 +34,8 @@ sh scripts/slurm_test_mgpu.sh ${PARTITION} ${NUM_GPUS} \
 ### 2. Evaluation with a pytorch model
 ``` shell
 docker exec -it centerpoint bash
-cd ~/OpenPCDet/tools/
-python test.py --cfg_file cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt ../ckpt/checkpoint_epoch_24.pth
+cd ~/CenterPointPillar
+python object_detection/test.py --cfg_file tools/cfgs/waymo_models/centerpoint_pillar_inference.yaml --ckpt /home/lidar/CenterPointPillar/ckpt/checkpoint_epoch_24.pth
 ```
 
 - Results as shown:

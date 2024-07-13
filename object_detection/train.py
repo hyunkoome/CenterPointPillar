@@ -3,10 +3,9 @@ import datetime
 import glob
 import os
 from pathlib import Path
-from test import repeat_eval_ckpt
 
 import torch
-import torch.nn as nn
+# import torch.nn as nn
 from tensorboardX import SummaryWriter
 
 from general.config.config import cfg, cfg_from_list, cfg_from_yaml_file, log_config_to_file
@@ -16,6 +15,8 @@ from general.utilities.train_utils import train_model
 
 from object_detection.datasets import build_dataloader
 from object_detection.detectors3d import build_network, model_fn_decorator
+from object_detection.test import repeat_eval_ckpt
+
 
 def parse_config():
     parser = argparse.ArgumentParser(description='arg parser')
@@ -33,7 +34,8 @@ def parse_config():
     parser.add_argument('--fix_random_seed', action='store_true', default=False, help='')
     parser.add_argument('--ckpt_save_interval', type=int, default=1, help='number of training epochs')
     parser.add_argument('--local_rank', type=int, default=None, help='local rank for distributed training')
-    parser.add_argument('--max_ckpt_save_num', type=int, default=30, help='max number of saved checkpoint')
+    # parser.add_argument('--max_ckpt_save_num', type=int, default=30, help='max number of saved checkpoint')
+    parser.add_argument('--max_ckpt_save_num', type=int, default=None, help='max number of saved checkpoint')
     parser.add_argument('--merge_all_iters_to_one_epoch', action='store_true', default=False, help='')
     parser.add_argument('--set', dest='set_cfgs', default=None, nargs=argparse.REMAINDER,
                         help='set extra config keys if needed')
@@ -42,19 +44,22 @@ def parse_config():
     parser.add_argument('--start_epoch', type=int, default=0, help='')
     parser.add_argument('--num_epochs_to_eval', type=int, default=0, help='number of checkpoints to be evaluated')
     parser.add_argument('--save_to_file', action='store_true', default=False, help='')
-    
-    parser.add_argument('--use_tqdm_to_record', action='store_true', default=False, help='if True, the intermediate losses will not be logged to file, only tqdm will be used')
+
+    parser.add_argument('--use_tqdm_to_record', action='store_true', default=False,
+                        help='if True, the intermediate losses will not be logged to file, only tqdm will be used')
     parser.add_argument('--logger_iter_interval', type=int, default=50, help='')
     parser.add_argument('--ckpt_save_time_interval', type=int, default=300, help='in terms of seconds')
     parser.add_argument('--wo_gpu_stat', action='store_true', help='')
     parser.add_argument('--use_amp', action='store_true', help='use mix precision training')
+    parser.add_argument('--eval_only_last_epoch', action='store_true', default=False,
+                        help='after training, just evaluate the last checkpoint')
 
     args = parser.parse_args()
 
     cfg_from_yaml_file(args.cfg_file, cfg)
     cfg.TAG = Path(args.cfg_file).stem
     cfg.EXP_GROUP_PATH = '/'.join(args.cfg_file.split('/')[1:-1])  # remove 'cfgs' and 'xxxx.yaml'
-    
+
     args.use_amp = args.use_amp or cfg.OPTIMIZATION.get('USE_AMP', False)
 
     if args.set_cfgs is not None:
@@ -71,7 +76,7 @@ def main():
     else:
         if args.local_rank is None:
             args.local_rank = int(os.environ.get('LOCAL_RANK', '0'))
-            
+
         total_gpus, cfg.LOCAL_RANK = getattr(common_utils, 'init_dist_%s' % args.launcher)(
             args.tcp_port, args.local_rank, backend='nccl'
         )
@@ -84,6 +89,7 @@ def main():
         args.batch_size = args.batch_size // total_gpus
 
     args.epochs = cfg.OPTIMIZATION.NUM_EPOCHS if args.epochs is None else args.epochs
+    args.max_ckpt_save_num = args.epochs if args.max_ckpt_save_num is None else args.max_ckpt_save_num
 
     if args.fix_random_seed:
         common_utils.set_random_seed(666 + cfg.LOCAL_RANK)
@@ -106,7 +112,7 @@ def main():
         logger.info('Training in distributed mode : total_batch_size: %d' % (total_gpus * args.batch_size))
     else:
         logger.info('Training with a single process')
-        
+
     for key, val in vars(args).items():
         logger.info('{:16} {}'.format(key, val))
     log_config_to_file(cfg, logger=logger)
@@ -142,11 +148,12 @@ def main():
         model.load_params_from_file(filename=args.pretrained_model, to_cpu=dist_train, logger=logger)
 
     if args.ckpt is not None:
-        it, start_epoch = model.load_params_with_optimizer(args.ckpt, to_cpu=dist_train, optimizer=optimizer, logger=logger)
+        it, start_epoch = model.load_params_with_optimizer(args.ckpt, to_cpu=dist_train, optimizer=optimizer,
+                                                           logger=logger)
         last_epoch = start_epoch + 1
     else:
         ckpt_list = glob.glob(str(ckpt_dir / '*.pth'))
-              
+
         if len(ckpt_list) > 0:
             ckpt_list.sort(key=os.path.getmtime)
             while len(ckpt_list) > 0:
@@ -161,8 +168,10 @@ def main():
 
     model.train()  # before wrap to DistributedDataParallel to support fixed some parameters
     if dist_train:
-        model = nn.parallel.DistributedDataParallel(model, device_ids=[cfg.LOCAL_RANK % torch.cuda.device_count()])
-    logger.info(f'----------- Model {cfg.MODEL.NAME} created, param count: {sum([m.numel() for m in model.parameters()])} -----------')
+        model = torch.nn.parallel.DistributedDataParallel(model,
+                                                          device_ids=[cfg.LOCAL_RANK % torch.cuda.device_count()])
+    logger.info(
+        f'----------- Model {cfg.MODEL.NAME} created, param count: {sum([m.numel() for m in model.parameters()])} -----------')
     logger.info(model)
 
     lr_scheduler, lr_warmup_scheduler = build_scheduler(
@@ -191,11 +200,11 @@ def main():
         lr_warmup_scheduler=lr_warmup_scheduler,
         ckpt_save_interval=args.ckpt_save_interval,
         max_ckpt_save_num=args.max_ckpt_save_num,
-        merge_all_iters_to_one_epoch=args.merge_all_iters_to_one_epoch, 
-        logger=logger, 
+        merge_all_iters_to_one_epoch=args.merge_all_iters_to_one_epoch,
+        logger=logger,
         logger_iter_interval=args.logger_iter_interval,
         ckpt_save_time_interval=args.ckpt_save_time_interval,
-        use_logger_to_record=not args.use_tqdm_to_record, 
+        use_logger_to_record=not args.use_tqdm_to_record,
         show_gpu_stat=not args.wo_gpu_stat,
         use_amp=args.use_amp,
         cfg=cfg
@@ -217,13 +226,15 @@ def main():
     )
     eval_output_dir = output_dir / 'eval' / 'eval_with_train'
     eval_output_dir.mkdir(parents=True, exist_ok=True)
-    args.start_epoch = max(args.epochs - args.num_epochs_to_eval, 0)  # Only evaluate the last args.num_epochs_to_eval epochs
 
-    repeat_eval_ckpt(
-        model.module if dist_train else model,
-        test_loader, args, eval_output_dir, logger, ckpt_dir,
-        dist_test=dist_train
-    )
+    # Only evaluate the last args.num_epochs_to_eval epochs
+    if args.eval_only_last_epoch:
+        args.start_epoch = max(args.epochs - args.num_epochs_to_eval, 0)
+        # print(args.start_epoch)
+
+    repeat_eval_ckpt(model=model.module if dist_train else model,
+                     test_loader=test_loader, args=args, eval_output_dir=eval_output_dir, logger=logger,
+                     ckpt_dir=ckpt_dir, dist_test=dist_train)
     logger.info('**********************End evaluation %s/%s(%s)**********************' %
                 (cfg.EXP_GROUP_PATH, cfg.TAG, args.extra_tag))
 
