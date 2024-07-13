@@ -3,9 +3,7 @@ import os
 import torch
 import torch.nn as nn
 from pcdet.ops.iou3d_nms import iou3d_nms_utils
-# from pcdet.models.model_utils import model_nms_utils
-from general.networks import nms_utils # as model_nms_utils
-from general.utilities.spconv_utils import find_all_spconv_keys
+from general.networks import nms_utils
 import object_detection.detectors3d.centerpoint_pillar.voxel_feature_encoding_1st as vfe
 import object_detection.detectors3d.centerpoint_pillar.to_bev_2nd as bev
 import object_detection.detectors3d.centerpoint_pillar.backbones_3rd as backbones
@@ -265,23 +263,8 @@ class Detector3DTemplate(nn.Module):
     def _load_state_dict(self, model_state_disk, *, strict=True):
         state_dict = self.state_dict()  # local cache of state_dict
 
-        spconv_keys = find_all_spconv_keys(self)
-
         update_model_state = {}
         for key, val in model_state_disk.items():
-            if key in spconv_keys and key in state_dict and state_dict[key].shape != val.shape:
-                # with different spconv versions, we need to adapt weight shapes for spconv blocks
-                # adapt spconv weights from version 1.x to version 2.x if you used weights from spconv 1.x
-
-                val_native = val.transpose(-1, -2)  # (k1, k2, k3, c_in, c_out) to (k1, k2, k3, c_out, c_in)
-                if val_native.shape == state_dict[key].shape:
-                    val = val_native.contiguous()
-                else:
-                    assert val.shape.__len__() == 5, 'currently only spconv 3D is supported'
-                    val_implicit = val.permute(4, 0, 1, 2, 3)  # (k1, k2, k3, c_in, c_out) to (c_out, k1, k2, k3, c_in)
-                    if val_implicit.shape == state_dict[key].shape:
-                        val = val_implicit.contiguous()
-
             if key in state_dict and state_dict[key].shape == val.shape:
                 update_model_state[key] = val
                 # logger.info('Update weight %s: %s' % (key, str(val.shape)))
