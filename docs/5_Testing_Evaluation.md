@@ -15,6 +15,10 @@ python test.py --cfg_file tools/cfgs/waymo_models/centerpoint_pillar_train_refac
 ```shell script
 python test.py --cfg_file ${CONFIG_FILE} --batch_size ${BATCH_SIZE} --eval_all
 ```
+- for examples
+```shell script
+python test.py --cfg_file tools/cfgs/waymo_models/centerpoint_pillar_train_refactoring.yaml --ckpt_dir /home/hyunkoo/DATA/HDD8TB/LiDAR/CenterPointPillarLocal/ckpt --eval_all
+```
 
 * To test with multiple GPUs:
 ```shell script
